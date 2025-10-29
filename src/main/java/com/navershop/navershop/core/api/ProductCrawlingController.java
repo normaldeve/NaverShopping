@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ProductCrawlingController {
 
-    private final ProductCrawlingService crawlingService;
+    private final BaseCrawlingService crawlingService;
 
     /**
      * 전체 카테고리 크롤링

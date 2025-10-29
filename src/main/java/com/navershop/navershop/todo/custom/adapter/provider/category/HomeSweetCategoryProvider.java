@@ -33,12 +33,13 @@ public class HomeSweetCategoryProvider implements CategoryProvider<ProductCatego
     }
 
     @Override
-    public Integer getCategoryDepth(ProductCategory category) {
-        return category.getDepth();
+    public Long getParentCategoryId(ProductCategory category) {
+        return category.getParentId();
     }
 
     @Override
-    public Long getParentCategoryId(ProductCategory category) {
-        return category.getParentId();
+    public ProductCategory findById(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다: " + categoryId));
     }
 }
