@@ -1,4 +1,4 @@
-# 네이버 쇼핑 API 크롤링 프로젝트 (V1.0.1)
+# 네이버 쇼핑 API 크롤링 프로젝트
 
 ## 1. 설명
 네이버 쇼핑 API를 활용하여 카테고리 이름에 해당하는 상품 데이터를 수집하고 DB에 저장하는 프로그램입니다.
@@ -64,7 +64,7 @@ API 응답에 포함되는 주요 정보:
 - 쇼핑몰명 (mallName)
 - 카테고리 (category1~4)
 
-## 5. 코드 작성하기 (아래 코드는 모두 예시용입니다. 참고만 해주세요!!)
+## 5. 코드 작성하기
 
 ### 5.1 프로젝트 구조
 ```
@@ -104,7 +104,9 @@ src/main/java/com/navershop/navershop/
     └── repository/               # 엔티티 및 레포지토리
         ├── category/            # Category 엔티티
         ├── product/             # Product 엔티티
-        └── user/                # User 엔티티
+        ├── user/                # User 엔티티
+        ├── option/              # Option 관련 엔티티 (선택)
+        └── sku/                 # SKU 관련 엔티티 (선택)
 ```
 
 ### 5.2 엔티티 작성
@@ -141,7 +143,6 @@ public class Product {
 ```
 
 **ProductCategory (카테고리 정보)**
-- id, parentId 값은 필수입니다
 ```java
 @Entity
 @Table(name = "product_category")
@@ -155,11 +156,11 @@ public class ProductCategory {
     
     private Long parentId;      // 부모 카테고리 ID (필수)
     
-    @Column(nullable = false)
-    private Integer depth;      // 카테고리 깊이 (필수)
     // ... 기타 필드
 }
 ```
+
+> **중요**: `parentId` 필드는 필수입니다. 이를 통해 계층 구조를 파악하고 상위 카테고리를 조회합니다.
 
 **User (판매자 정보)**
 ```java
@@ -189,7 +190,6 @@ public class User {
 
 #### 5.3.1 CategoryProvider 구현 (필수)
 카테고리 데이터를 제공하는 Provider를 구현합니다.
-- 메서드들은 모두 실제 사용되는 메서드입니다
 
 ```java
 @Component
@@ -214,20 +214,22 @@ public class HomeSweetCategoryProvider implements CategoryProvider<ProductCatego
     }
     
     @Override
-    public Integer getCategoryDepth(ProductCategory category) {
-        return category.getDepth();
+    public Long getParentCategoryId(ProductCategory category) {
+        return category.getParentId();
     }
     
     @Override
-    public Long getParentCategoryId(ProductCategory category) {
-        return category.getParentId();
+    public ProductCategory findById(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+            .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다: " + categoryId));
     }
 }
 ```
 
+> **중요**: `findById()` 메서드는 상위 카테고리 조회를 위해 필수입니다.
+
 #### 5.3.2 UserProvider 구현 (필수)
 판매자 정보를 제공하는 Provider를 구현합니다.
-- 메서드들은 모두 실제 사용되는 메서드입니다
 
 ```java
 @Component
@@ -246,7 +248,6 @@ public class HomeSweetUserProvider implements UserProvider<User> {
 
 #### 5.3.3 ProductProvider 구현 (필수)
 상품을 저장하는 Provider를 구현합니다.
-- 메서드들은 모두 실제 사용되는 메서드입니다
 
 ```java
 @Component
@@ -273,9 +274,6 @@ public class HomeSweetProductProvider implements ProductProvider<Product> {
 
 #### 5.3.4 ProductMapper 구현 (필수)
 네이버 API 응답을 본인의 Product 엔티티로 변환하는 Mapper를 구현합니다.
-- 해당 클래스에서 네이버 응답 DTO에서 본인이 저장하고자 하는 값을 커스텀할 수 있습니다
-- 예를 들어 아래 코드처럼 최저가, 최고가 조합으로 특정 가격 정보를 만들 수 있으며, 원한다면 그대로 사용하셔도 좋습니다
-- 네이버 응답 DTO 구조를 확인하세요!
 
 ```java
 @Component
@@ -365,7 +363,6 @@ public class HomeSweetOptionGenerator implements OptionGenerator<Product> {
 
 ### 5.4 크롤링 서비스 구현
 마지막으로 `BaseCrawlingService`를 상속받는 서비스를 작성합니다.
-- 나의 Product, Category, User와 관련된 Entity들을 넣어주시면 끝입니다
 
 ```java
 @Service
@@ -390,23 +387,36 @@ public class ProductCrawlingService extends BaseCrawlingService<Product, Product
 ### 6.1 카테고리 데이터 준비
 먼저 DB에 카테고리 데이터를 입력해야 합니다.
 
-```sql
--- Depth 1 (대분류)
-INSERT INTO product_category (name, parent_id, depth, created_at, updated_at) 
-VALUES 
-    ('가구', NULL, 1, NOW(), NOW()),
-    ('침구', NULL, 1, NOW(), NOW()),
-    ('주방용품', NULL, 1, NOW(), NOW());
+### 6.1 카테고리 데이터 준비
+먼저 DB에 카테고리 데이터를 입력해야 합니다.
 
--- Depth 2 (중분류)
-INSERT INTO product_category (name, parent_id, depth, created_at, updated_at) 
+```sql
+-- 최상위 카테고리 (parentId = NULL)
+INSERT INTO product_category (name, parent_id, created_at, updated_at) 
 VALUES 
-    ('침대', 1, 2, NOW(), NOW()),
-    ('소파', 1, 2, NOW(), NOW()),
-    ('책상', 1, 2, NOW(), NOW()),
-    ('이불', 2, 2, NOW(), NOW()),
-    ('베개', 2, 2, NOW(), NOW());
+    ('가구', NULL, NOW(), NOW()),      -- ID: 1
+    ('유아', NULL, NOW(), NOW()),      -- ID: 2
+    ('주방용품', NULL, NOW(), NOW());  -- ID: 3
+
+-- 하위 카테고리 (parentId 지정)
+INSERT INTO product_category (name, parent_id, created_at, updated_at) 
+VALUES 
+    ('침대', 1, NOW(), NOW()),    -- 가구 > 침대
+    ('소파', 1, NOW(), NOW()),    -- 가구 > 소파
+    ('책상', 1, NOW(), NOW()),    -- 가구 > 책상
+    ('침구', 2, NOW(), NOW()),    -- 유아 > 침구
+    ('장난감', 2, NOW(), NOW());  -- 유아 > 장난감
+
+-- 더 깊은 계층도 가능 (3단계, 4단계 등)
+INSERT INTO product_category (name, parent_id, created_at, updated_at) 
+VALUES 
+    ('싱글침대', 4, NOW(), NOW()),  -- 가구 > 침대 > 싱글침대
+    ('더블침대', 4, NOW(), NOW());  -- 가구 > 침대 > 더블침대
 ```
+
+> **크롤링 대상**: 시스템은 자동으로 리프 노드(최하위 카테고리)만 선택합니다.
+>
+> 위 예시에서는: 소파, 책상, 침구, 장난감, 싱글침대, 더블침대, 주방용품
 
 ### 6.2 판매자 데이터 준비
 ```sql
@@ -443,14 +453,13 @@ curl -X POST "http://localhost:8080/api/crawling/products?userId=1&productsPerCa
 ```json
 {
   "totalCategories": 7,
-  "successCategories": 7,
-  "failedCategories": 0,
-  "totalProducts": 70,
+  "successCategories": 6,
+  "failedCategories": 1,
+  "totalProducts": 60,
   "categoryResults": [
     {
       "categoryId": 4,
       "categoryName": "침대",
-      "depth": 2,
       "productCount": 10,
       "status": "SUCCESS",
       "error": null
@@ -458,15 +467,41 @@ curl -X POST "http://localhost:8080/api/crawling/products?userId=1&productsPerCa
     {
       "categoryId": 5,
       "categoryName": "소파",
-      "depth": 2,
       "productCount": 10,
       "status": "SUCCESS",
       "error": null
     },
     {
-      "categoryId": 1,
-      "categoryName": "가구",
-      "depth": 1,
+      "categoryId": 6,
+      "categoryName": "침구",
+      "productCount": 10,
+      "status": "SUCCESS",
+      "error": null
+    },
+    {
+      "categoryId": 7,
+      "categoryName": "장난감",
+      "productCount": 10,
+      "status": "SUCCESS",
+      "error": null
+    },
+    {
+      "categoryId": 8,
+      "categoryName": "싱글침대",
+      "productCount": 10,
+      "status": "SUCCESS",
+      "error": null
+    },
+    {
+      "categoryId": 9,
+      "categoryName": "더블침대",
+      "productCount": 10,
+      "status": "SUCCESS",
+      "error": null
+    },
+    {
+      "categoryId": 3,
+      "categoryName": "주방용품",
       "productCount": 0,
       "status": "NO_RESULTS",
       "error": null
@@ -475,96 +510,174 @@ curl -X POST "http://localhost:8080/api/crawling/products?userId=1&productsPerCa
 }
 ```
 
+> **참고**:
+> - `categoryName`은 리프 노드의 이름만 표시되지만, 실제 검색에는 전체 경로가 사용됩니다
+> - 예: "침구" 카테고리의 실제 검색어는 "유아 침구"
+
 ## 7. 동작 원리
 
 ### 7.1 크롤링 프로세스
-1. **카테고리 선택**
-    - Depth 1 카테고리의 하위 카테고리(Depth 2)를 우선적으로 선택
-    - Depth 2가 없으면 Depth 1 카테고리 사용
+1. **리프 카테고리 선택**
+    - 자식이 없는 최하위 카테고리(리프 노드)만 자동으로 선택
+    - 계층 구조를 분석하여 실제로 검색이 필요한 카테고리만 추출
 
-2. **API 호출**
-    - 카테고리 이름을 키워드로 네이버 쇼핑 API 호출
+2. **검색 키워드 생성**
+    - **상위 카테고리 경로를 모두 포함**한 검색어 생성
+    - 예시: "유아 > 침구" → 검색어: **"유아 침구"**
+    - 예시: "가구 > 침실 > 침대" → 검색어: **"가구 침실 침대"**
+    - 최상위 부모부터 현재 카테고리까지 전체 경로 사용
+
+3. **API 호출**
+    - 생성된 검색 키워드로 네이버 쇼핑 API 호출
     - 여러 페이지가 필요한 경우 자동으로 페이지네이션 처리
+    - 최대 1000개까지 수집 가능
 
-3. **데이터 변환**
+4. **데이터 변환**
     - ProductMapper를 통해 API 응답을 본인의 Product 엔티티로 변환
+    - 가격, 브랜드, 이미지 등 필요한 정보만 추출
 
-4. **옵션 생성** (선택사항)
+5. **옵션 생성** (선택사항)
     - OptionGenerator가 구현되어 있으면 옵션 자동 생성
+    - 카테고리별로 적절한 옵션 조합 생성 (색상, 사이즈 등)
 
-5. **중복 체크**
+6. **중복 체크**
     - ProductProvider의 `isDuplicate()` 메서드로 중복 확인
     - 기본 로직: 동일한 판매자의 동일한 상품명이 있는지 확인
 
-6. **DB 저장**
+7. **DB 저장**
     - 중복이 아닌 경우에만 저장
+    - 트랜잭션 처리로 데이터 일관성 보장
 
-### 7.2 카테고리 선택 로직
+### 7.2 리프 카테고리 선택 로직
+시스템은 **자식이 없는 카테고리(리프 노드)**만 자동으로 선택합니다.
+
 ```
-예시:
-├── 가구 (Depth 1, ID: 1)
-│   ├── 침대 (Depth 2, ID: 4)     ← 선택됨
-│   ├── 소파 (Depth 2, ID: 5)     ← 선택됨
-│   └── 책상 (Depth 2, ID: 6)     ← 선택됨
+예시 1: 기본 구조
+├── 가구 (ID: 1, parentId: null)
+│   ├── 침대 (ID: 2, parentId: 1)     ← 선택됨 (리프 노드)
+│   ├── 소파 (ID: 3, parentId: 1)     ← 선택됨 (리프 노드)
+│   └── 책상 (ID: 4, parentId: 1)     ← 선택됨 (리프 노드)
 │
-├── 침구 (Depth 1, ID: 2)
-│   ├── 이불 (Depth 2, ID: 7)     ← 선택됨
-│   └── 베개 (Depth 2, ID: 8)     ← 선택됨
+├── 유아 (ID: 5, parentId: null)
+│   └── 침구 (ID: 6, parentId: 5)     ← 선택됨 (리프 노드)
 │
-└── 주방용품 (Depth 1, ID: 3)     ← Depth 2가 없으므로 선택됨
+└── 주방용품 (ID: 7, parentId: null)  ← 선택됨 (자식이 없음)
+
+선택된 카테고리: [침대, 소파, 책상, 침구, 주방용품]
 ```
 
-### 7.3 네이버 API 제약사항
+```
+예시 2: 3단계 구조
+├── 가구 (ID: 1, parentId: null)
+│   └── 침실 (ID: 2, parentId: 1)
+│       ├── 침대 (ID: 3, parentId: 2)
+│       │   ├── 싱글 (ID: 4, parentId: 3)  ← 선택됨 (리프 노드)
+│       │   └── 더블 (ID: 5, parentId: 3)  ← 선택됨 (리프 노드)
+│       └── 협탁 (ID: 6, parentId: 2)      ← 선택됨 (리프 노드)
+
+선택된 카테고리: [싱글, 더블, 협탁]
+```
+
+### 7.3 검색 키워드 생성 로직
+각 리프 카테고리에 대해 **최상위 부모부터 현재까지의 전체 경로**를 검색어로 사용합니다.
+
+```java
+// 알고리즘 의사코드
+function buildFullCategoryPath(category):
+    path = []
+    current = category
+    
+    // 현재부터 최상위 부모까지 역순으로 수집
+    while current != null:
+        path.add(current.name)
+        current = findParent(current)
+    
+    // 최상위 → 최하위 순서로 정렬
+    path.reverse()
+    
+    // 공백으로 연결하여 검색어 생성
+    return path.join(" ")
+```
+
+**실제 동작 예시:**
+
+| 카테고리 구조 | 생성되는 검색 키워드 | 검색 결과 |
+|-------------|------------------|----------|
+| 유아 > 침구 | **"유아 침구"** | 유아용 침구 상품 ✅ |
+| 가구 > 침실 > 침대 | **"가구 침실 침대"** | 침실용 가구 침대 ✅ |
+| 가구 > 침실 > 침대 > 싱글 | **"가구 침실 침대 싱글"** | 싱글 침대 상품 ✅ |
+| 주방용품 | **"주방용품"** | 주방용품 전체 |
+
+### 7.4 카테고리 계층 구조 분석
+시스템이 리프 노드를 찾는 방법:
+
+```java
+1. 모든 카테고리 로드
+2. 부모 카테고리 ID들을 Set에 수집
+   parentIds = {1, 2, 5}  // 가구, 침실, 유아가 부모임
+3. 부모가 아닌 카테고리만 필터링
+   leafCategories = 전체 - parentIds
+```
+
+**예시:**
+```
+전체 카테고리: [가구(1), 침실(2), 침대(3), 싱글(4), 더블(5), 유아(6), 침구(7)]
+부모 ID 목록: {1, 2, 3, 6}
+리프 카테고리: [싱글(4), 더블(5), 침구(7)]  ← 이것들만 크롤링
+```
+
+### 7.5 네이버 API 제약사항
 - **최대 조회 개수**: 한 키워드당 최대 1000개까지만 조회 가능 (start 파라미터 제한)
 - **호출 간격**: API 호출 간 기본 100ms 지연 (application.properties에서 설정 가능)
 - **일일 호출 한도**: 네이버 API 정책에 따라 제한됨 (무료 플랜 기준)
 
 ## 8. 설정 옵션
 
-### 8.1 application.properties 설정
-```properties
-# 데이터베이스 설정
+### 8.1 application.yml 설정
+```yml
 spring:
-    application:
-        name: HomeSweetCrawler
-    config:
-        import: optional:file:.env[.properties]
-    datasource:
-        url: ${DB_URL}
-        username: ${DB_USER_NAME}
-        password: ${DB_PASSWORD}
-        driver-class-name: ${DB_DRIVER_NAME}
-    jpa:
-        hibernate:
-            ddl-auto: none
-        show-sql: true
-        properties:
-            hibernate:
-                format_sql: true
+  application:
+    name: HomeSweetCrawler
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER_NAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DB_DRIVER_NAME}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
 naver:
-api:
-client-id: ${NAVER_CLIENT_ID}
-client-secret: ${NAVER_CLIENT_SECRET}
-base-url: https://openapi.naver.com/v1/search/shop.xml
-request-delay: 100
+  api:
+    client-id: ${NAVER_CLIENT_ID}
+    client-secret: ${NAVER_CLIENT_SECRET}
+    base-url: https://openapi.naver.com/v1/search/shop.xml
+    request-delay: 100
 
 server:
-port: 8888
+  port: 8888
 ```
 
 ## 9. 주의사항
 
 ### 9.1 코드 수정 규칙
-- ❌ `core`, `template` 패키지의 코드는 **웬만하면 수정하지 않고 사용하시면 됩니다 :)**
-- ✅ 모든 커스텀 코드는 `custom`를 생성한 뒤 패키지 하위에 작성하면 됩니!
-- ✅ CategoryProvider 구현 시 `depth`와 `parentId` 필드는 **필수**입니다
-- ✅ 옵션 기능은 선택사항이며, 필요 없으면 OptionGenerator를 구다
+- ❌ `core`, `template` 패키지의 코드는 **수정하지 않으셔도 됩니다!**
+- ✅ 모든 커스텀 코드는 `custom` 패키지 하위에 작성해야 합니다
+- ✅ 옵션 기능은 선택사항이며, 필요 없으면 OptionGenerator를 구현하지 않아도 됩니다
+
+### 9.2 카테고리 계층 구조
+- 카테고리 간 **순환 참조가 없도록** 주의하세요 (A → B → A 같은 구조)
+- `parentId`가 올바르게 설정되어야 검색 키워드가 제대로 생성됩니다
 
 ### 9.2 데이터 품질
 - 네이버 API에서 가져온 데이터는 완벽하지 않을 수 있습니다
-- **가격 정보가 없는 경우를 대비한 기본값 처리가 필요합니다**
-- HTML 태그가 포함된 상품명은 자동으로 제거됩니다
+- 가격 정보가 없는 경우를 대비한 기본값 처리가 필요합니다
 
 ## 10. 트러블슈팅
 
@@ -588,7 +701,7 @@ port: 8888
 **원인**: 너무 많은 요청을 짧은 시간에 보냈습니다
 
 **해결방법**:
-1. `application.yml`에서 `naver.api.request-delay` 값을 늘립니다
+1. `application.properties`에서 `naver.api.request-delay` 값을 늘립니다
    ```properties
    naver.api.request-delay=200  # 100 → 200으로 증가
    ```
@@ -601,14 +714,6 @@ port: 8888
 1. `existsBySellerAndName` 메서드가 제대로 구현되었는지 확인
 2. 필요시 추가적인 중복 체크 조건 추가 (예: 브랜드, 가격 등)
 
-### 10.5 옵션 생성 실패
-**원인**: OptionGenerator 구현에 문제가 있거나 필수 엔티티가 누락되었습니다
-
-**해결방법**:
-1. ProductOptionGroup, ProductOptionValue, Sku 엔티티가 올바르게 작성되었는지 확인
-2. 연관관계 매핑이 올바른지 확인
-3. 옵션 기능이 필요 없다면 OptionGenerator를 구현하지 않아도 됩니다
-
 ## 11. 예제 프로젝트
 `homesweet-naver` 브랜치에서 실제 구현 예제를 확인할 수 있습니다.
 
@@ -617,16 +722,8 @@ port: 8888
 git checkout homesweet-naver
 ```
 
-해당 브랜치에는 다음이 포함되어 있습니다:
-- 완전히 구현된 모든 Provider, Mapper
-- 옵션 생성 로직 예제 (주석 처리됨)
-- 실제 프로젝트에 적용 가능한 엔티티 구조
-
 ## 12. 참고 자료
 - [네이버 쇼핑 API 공식 문서](https://developers.naver.com/docs/serviceapi/search/shopping/shopping.md)
 - [네이버 개발자센터](https://developers.naver.com/)
-
-## 13. 긴 글 읽어주셔서 감사합니다 :)
-- 옵션 관련해서 추가하는 방법에 대한 좋은 아이디어가 있다면 언제든지 알려주시면 감사하겠습니다 ㅎㅎ
 
 **문의사항이 있으시면 이슈를 등록해주세요.**
