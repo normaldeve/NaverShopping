@@ -1,5 +1,6 @@
 package com.navershop.navershop.custom.entity.repository;
 
+import com.navershop.navershop.custom.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
