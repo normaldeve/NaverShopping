@@ -141,8 +141,7 @@ public class Product {
 ```
 
 **ProductCategory (카테고리 정보)**
-- id, parentId, depth 값은 필수입니다
-- depth가 없을 때도 처리 가능하도록 수정할 예정입니다
+- id, parentId 값은 필수입니다
 ```java
 @Entity
 @Table(name = "product_category")
