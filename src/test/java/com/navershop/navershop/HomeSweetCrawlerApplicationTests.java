@@ -1,10 +1,10 @@
-package com.homesweet.homesweetcrawler;
+package com.navershop.navershop;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class HomeSweetCrawlerApplicationTests {
+class NaverShopApplicationTests {
 
     @Test
     void contextLoads() {
