@@ -589,7 +589,7 @@ port: 8888
 **원인**: 너무 많은 요청을 짧은 시간에 보냈습니다
 
 **해결방법**:
-1. `application.properties`에서 `naver.api.request-delay` 값을 늘립니다
+1. `application.yml`에서 `naver.api.request-delay` 값을 늘립니다
    ```properties
    naver.api.request-delay=200  # 100 → 200으로 증가
    ```
@@ -626,6 +626,5 @@ git checkout homesweet-naver
 ## 12. 참고 자료
 - [네이버 쇼핑 API 공식 문서](https://developers.naver.com/docs/serviceapi/search/shopping/shopping.md)
 - [네이버 개발자센터](https://developers.naver.com/)
-- [Spring Boot 공식 문서](https://spring.io/projects/spring-boot)
 
 **문의사항이 있으시면 이슈를 등록해주세요.**
