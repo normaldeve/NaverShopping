@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
+ * 브랜드 이름 랜덤으로 100개 만들었습니다 :)
  *
  * @author junnukim1007gmail.com
  * @date 25. 10. 29.

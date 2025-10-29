@@ -1,7 +1,6 @@
 package com.navershop.navershop.core.api;
 
 import com.navershop.navershop.template.service.BaseCrawlingService;
-import com.navershop.navershop.todo.custom.service.ProductCrawlingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ProductCrawlingController {
 
-    private final ProductCrawlingService crawlingService;
+    private final BaseCrawlingService crawlingService;
 
     /**
      * 전체 카테고리 크롤링

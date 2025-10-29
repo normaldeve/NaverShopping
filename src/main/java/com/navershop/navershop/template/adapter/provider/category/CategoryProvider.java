@@ -27,12 +27,12 @@ public interface CategoryProvider<CATEGORY> {
     String getCategoryName(CATEGORY category);
 
     /**
-     * 카테고리 Depth 추출
-     */
-    Integer getCategoryDepth(CATEGORY category);
-
-    /**
      * 부모 카테고리 ID 추출
      */
     Long getParentCategoryId(CATEGORY category);
+
+    /**
+     * 특정 ID의 카테고리 조회
+     */
+    CATEGORY findById(Long categoryId);
 }
