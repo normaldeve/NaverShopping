@@ -194,6 +194,22 @@ public class NaverShoppingApiClient {
         product.setImage(getTagValue("image", item));
         product.setProductId(getTagValue("productId", item));
 
+        // 메이커 & 카테고리
+        product.setMaker(getTagValue("maker", item));
+        product.setCategory1(getTagValue("category1", item));
+        product.setCategory2(getTagValue("category2", item));
+        product.setCategory3(getTagValue("category3", item));
+        product.setCategory4(getTagValue("category4", item));
+
+        // 원본 링크
+        product.setLink(getTagValue("link", item));
+
+        // 상품 타입
+        product.setProductType(getTagValue("productType", item));
+
+        // 상품몰
+        product.setMallName(getTagValue("mallName", item));
+
         return product;
     }
 
