@@ -93,8 +93,8 @@ src/main/java/com/navershop/navershop/
 │   └── service/                 # 크롤링 서비스 기본 클래스
 │       └── BaseCrawlingService.java
 │
-└── todo/                         # 사용자 커스텀 영역 ⭐
-    ├── custom/                   # 인터페이스 구현체
+└── # 사용자 커스텀 영역 ⭐ -> 여기 내에 코드만 모두 작성하면 됩니다!!
+    custom/                   
     │   ├── adapter/
     │   │   ├── mapper/          # ProductMapper 구현
     │   │   ├── option/          # OptionGenerator 구현 (선택)
@@ -106,8 +106,6 @@ src/main/java/com/navershop/navershop/
         ├── category/            # Category 엔티티
         ├── product/             # Product 엔티티
         ├── user/                # User 엔티티
-        ├── option/              # Option 관련 엔티티 (선택)
-        └── sku/                 # SKU 관련 엔티티 (선택)
 ```
 
 ### 5.2 엔티티 작성
@@ -178,14 +176,6 @@ public class User {
     // ... 기타 필드
 }
 ```
-
-#### 5.2.2 선택 엔티티 (옵션 기능 사용 시)
-옵션 기능이 필요한 경우에만 작성합니다:
-
-- **ProductOptionGroup**: 옵션 그룹 (예: 색상, 사이즈)
-- **ProductOptionValue**: 옵션 값 (예: 빨강, 파랑, S, M, L)
-- **Sku**: 재고 관리 단위
-- **ProductSkuOption**: SKU와 옵션 연결 테이블
 
 ### 5.3 인터페이스 구현
 
@@ -325,39 +315,6 @@ public class HomeSweetProductMapper implements ProductMapper<Product, ProductCat
             // 가격 정보 없음 - 기본값
             return 50000;
         }
-    }
-}
-```
-
-#### 5.3.5 OptionGenerator 구현 (선택)
-옵션 기능이 필요한 경우에만 구현합니다.
-
-```java
-@Component
-@RequiredArgsConstructor
-public class HomeSweetOptionGenerator implements OptionGenerator<Product> {
-    
-    @Override
-    public void generateAndAddOptions(Product product, String categoryName) {
-        // 카테고리별로 옵션 생성
-        if (categoryName.contains("의류") || categoryName.contains("옷")) {
-            // 색상, 사이즈 옵션 생성
-            addClothingOptions(product);
-        } else if (categoryName.contains("가전") || categoryName.contains("전자")) {
-            // 용량, 색상 옵션 생성
-            addElectronicsOptions(product);
-        }
-        // ... 기타 카테고리별 로직
-    }
-    
-    @Override
-    public boolean needsOptions(String categoryName) {
-        // 옵션이 필요한 카테고리인지 판단
-        return true; // 또는 특정 조건
-    }
-    
-    private void addClothingOptions(Product product) {
-        // 옵션 그룹 및 SKU 생성 로직
     }
 }
 ```
@@ -667,12 +624,7 @@ server:
 
 ## 9. 주의사항
 
-### 9.1 코드 수정 규칙
-- ❌ `core`, `template` 패키지의 코드는 **수정하지 않으셔도 됩니다!**
-- ✅ 모든 커스텀 코드는 `custom` 패키지 하위에 작성해야 합니다
-- ✅ 옵션 기능은 선택사항이며, 필요 없으면 OptionGenerator를 구현하지 않아도 됩니다
-
-### 9.2 카테고리 계층 구조
+### 9.1 카테고리 계층 구조
 - 카테고리 간 **순환 참조가 없도록** 주의하세요 (A → B → A 같은 구조)
 - `parentId`가 올바르게 설정되어야 검색 키워드가 제대로 생성됩니다
 
@@ -726,5 +678,8 @@ git checkout homesweet-naver
 ## 12. 참고 자료
 - [네이버 쇼핑 API 공식 문서](https://developers.naver.com/docs/serviceapi/search/shopping/shopping.md)
 - [네이버 개발자센터](https://developers.naver.com/)
+
+## 읽어주셔서 감사합니다 :)
+- 옵션에 대한 커스텀 방법에 대해 좋은 생각이 있으시다면 공유해주세요!!
 
 **문의사항이 있으시면 이슈를 등록해주세요.**
