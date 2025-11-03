@@ -29,7 +29,7 @@ public class ProductCrawlingController {
      */
     @PostMapping("/products")
     public BaseCrawlingService.CrawlingResult startCrawling(
-            @RequestParam(defaultValue = "1") Long userId,
+            @RequestParam(defaultValue = "11") Long userId,
             @RequestParam(defaultValue = "5") int productsPerCategory) {
 
         log.info("크롤링 시작: adminUserId={}, productsPerCategory={}",
