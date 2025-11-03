@@ -4,108 +4,70 @@ import com.navershop.navershop.core.dto.NaverShoppingResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * WebClient를 사용하는 네이버 쇼핑 API 클라이언트
+ *
+ *  성능 개선:
+ * - Non-blocking I/O
+ * - 커넥션 풀 재사용
+ * - 병렬 API 호출 최적화
+ */
 @Slf4j
 @Service
 public class NaverShoppingApiClient {
 
-    @Value("${naver.api.client-id}")
-    private String clientId;
-
-    @Value("${naver.api.client-secret}")
-    private String clientSecret;
+    private final WebClient webClient;
 
     @Value("${naver.api.request-delay:100}")
     private int requestDelay;
 
+    public NaverShoppingApiClient(WebClient webClient) {
+        this.webClient = webClient;
+    }
+
+    /**
+     * 단일 페이지 검색 (동기 방식)
+     */
     public NaverShoppingResponse searchProducts(String keyword, int display, int start, String sort) {
+        log.info("'{}' 검색 중... (start={}, display={})", keyword, start, display);
+
         try {
-            // URL 인코딩
-            String encodedKeyword = URLEncoder.encode(keyword, StandardCharsets.UTF_8);
+            String xmlResponse = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/v1/search/shop.xml")
+                            .queryParam("query", keyword)
+                            .queryParam("display", display)
+                            .queryParam("start", start)
+                            .queryParam("sort", sort)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .timeout(Duration.ofSeconds(10))
+                    .block();  // 동기로 변환
 
-            // XML 응답 사용
-            String apiURL = String.format(
-                    "https://openapi.naver.com/v1/search/shop.xml?query=%s&display=%d&start=%d&sort=%s",
-                    encodedKeyword, display, start, sort
-            );
+            return parseXmlResponse(xmlResponse);
 
-            log.info("'{}' 검색 중...", keyword);
-            log.info("API URL: {}", apiURL);
-
-            URL url = new URL(apiURL);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-
-            con.setRequestMethod("GET");
-            con.setRequestProperty("X-Naver-Client-Id", clientId);
-            con.setRequestProperty("X-Naver-Client-Secret", clientSecret);
-
-            int responseCode = con.getResponseCode();
-            log.info("응답 코드: {}", responseCode);
-
-            // 에러 처리
-            if (responseCode == 401) {
-                log.error("인증 오류 (401): Client ID 또는 Client Secret이 잘못되었습니다.");
-                return null;
-            } else if (responseCode == 403) {
-                log.error("접근 거부 (403): API 사용 권한이 없거나 일일 호출 한도를 초과했습니다.");
-                return null;
-            } else if (responseCode == 429) {
-                log.error("요청 제한 (429): 너무 많은 요청을 보냈습니다.");
-                return null;
-            }
-
-            BufferedReader br;
-            if (responseCode == 200) {
-                br = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8));
-            } else {
-                br = new BufferedReader(new InputStreamReader(con.getErrorStream(), StandardCharsets.UTF_8));
-                StringBuilder errorResponse = new StringBuilder();
-                String inputLine;
-                while ((inputLine = br.readLine()) != null) {
-                    errorResponse.append(inputLine);
-                }
-                br.close();
-                log.error("API 에러: {}", errorResponse.toString());
-                return null;
-            }
-
-            StringBuilder response = new StringBuilder();
-            String inputLine;
-            while ((inputLine = br.readLine()) != null) {
-                response.append(inputLine);
-            }
-            br.close();
-
-            String xmlResponse = response.toString();
-            log.debug("XML 응답: {}", xmlResponse);
-
-            // XML 파싱
-            NaverShoppingResponse result = parseXmlResponse(xmlResponse);
-
-            if (result != null) {
-                log.info("전체 검색 결과: {}개", result.getTotal());
-                log.info("{}개의 상품을 찾았습니다.",
-                        result.getItems() != null ? result.getItems().size() : 0);
-            }
-
-            return result;
-
+        } catch (WebClientResponseException e) {
+            handleWebClientError(e);
+            return null;
         } catch (Exception e) {
             log.error("API 호출 오류: {}", e.getMessage(), e);
             return null;
@@ -113,26 +75,144 @@ public class NaverShoppingApiClient {
     }
 
     /**
+     * 단일 페이지 검색 (비동기 방식 - Reactive)
+     */
+    public Mono<NaverShoppingResponse> searchProductsReactive(
+            String keyword, int display, int start, String sort) {
+
+        log.debug("비동기 검색: {} (start={})", keyword, start);
+
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/v1/search/shop.xml")
+                        .queryParam("query", keyword)
+                        .queryParam("display", display)
+                        .queryParam("start", start)
+                        .queryParam("sort", sort)
+                        .build())
+                .retrieve()
+                .bodyToMono(String.class)
+                .timeout(Duration.ofSeconds(10))
+                .map(this::parseXmlResponse)
+                .doOnError(WebClientResponseException.class, this::handleWebClientError)
+                .onErrorReturn(new NaverShoppingResponse());  // 에러 시 빈 응답
+    }
+
+    /**
+     * 여러 페이지 병렬 검색 (Reactive - 최고 성능)
+     *
+     * 특징:
+     * - 모든 페이지를 동시에 요청
+     * - Non-blocking I/O로 스레드 효율적 사용
+     * - 자동 재시도 및 에러 핸들링
+     */
+    public NaverShoppingResponse searchMultiplePagesReactive(
+            String keyword, int totalCount, int display, String sort) {
+
+        log.info("🚀 Reactive 병렬 검색 시작: '{}'로 {}개 상품 수집", keyword, totalCount);
+        long startTime = System.currentTimeMillis();
+
+        int pages = (totalCount + display - 1) / display;
+        int maxPages = Math.min(pages, 1000 / display);  // API 제한
+
+        // 모든 페이지를 병렬로 요청
+        List<NaverShoppingResponse> responses = Flux.range(0, maxPages)
+                .parallel()  // 병렬 처리
+                .runOn(Schedulers.parallel())  // 병렬 스케줄러 사용
+                .flatMap(page -> {
+                    int start = page * display + 1;
+
+                    // 요청 간격 조절 (Rate Limiting)
+                    return Mono.delay(Duration.ofMillis(requestDelay * page))
+                            .then(searchProductsReactive(keyword, display, start, sort))
+                            .retry(2);  // 실패 시 2번 재시도
+                })
+                .sequential()  // 다시 순차로 변환
+                .collectList()
+                .block();  // 모든 요청이 완료될 때까지 대기
+
+        // 결과 병합
+        NaverShoppingResponse combinedResponse = mergeResponses(responses, totalCount);
+
+        long endTime = System.currentTimeMillis();
+        log.info("✅ Reactive 검색 완료: {}개 수집, 소요시간: {}ms",
+                combinedResponse.getItems() != null ? combinedResponse.getItems().size() : 0,
+                endTime - startTime);
+
+        return combinedResponse;
+    }
+
+    /**
+     * 응답 병합
+     */
+    private NaverShoppingResponse mergeResponses(
+            List<NaverShoppingResponse> responses, int totalCount) {
+
+        NaverShoppingResponse combinedResponse = new NaverShoppingResponse();
+        combinedResponse.setItems(new ArrayList<>());
+
+        for (NaverShoppingResponse response : responses) {
+            if (response != null && response.getItems() != null) {
+                combinedResponse.getItems().addAll(response.getItems());
+
+                if (combinedResponse.getTotal() == null) {
+                    combinedResponse.setTotal(response.getTotal());
+                }
+
+                if (combinedResponse.getItems().size() >= totalCount) {
+                    break;
+                }
+            }
+        }
+
+        // 필요한 개수만큼만 자르기
+        if (combinedResponse.getItems().size() > totalCount) {
+            combinedResponse.setItems(
+                    combinedResponse.getItems().subList(0, totalCount)
+            );
+        }
+
+        return combinedResponse;
+    }
+
+    /**
+     * WebClient 에러 핸들링
+     */
+    private void handleWebClientError(WebClientResponseException e) {
+        int statusCode = e.getStatusCode().value();
+
+        switch (statusCode) {
+            case 401 -> log.error("인증 오류 (401): Client ID 또는 Client Secret이 잘못되었습니다.");
+            case 403 -> log.error("접근 거부 (403): API 사용 권한이 없거나 일일 호출 한도를 초과했습니다.");
+            case 429 -> log.error("요청 제한 (429): 너무 많은 요청을 보냈습니다.");
+            default -> log.error("API 에러 ({}): {}", statusCode, e.getResponseBodyAsString());
+        }
+    }
+
+    /**
      * XML 응답 파싱
      */
     private NaverShoppingResponse parseXmlResponse(String xmlString) {
+        if (xmlString == null || xmlString.isEmpty()) {
+            return new NaverShoppingResponse();
+        }
+
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
-            Document doc = builder.parse(new ByteArrayInputStream(xmlString.getBytes(StandardCharsets.UTF_8)));
+            Document doc = builder.parse(
+                    new ByteArrayInputStream(xmlString.getBytes(StandardCharsets.UTF_8)));
 
             doc.getDocumentElement().normalize();
 
-            // channel 찾기
             NodeList channelList = doc.getElementsByTagName("channel");
             if (channelList.getLength() == 0) {
                 log.error("XML 응답 구조가 올바르지 않습니다.");
-                return null;
+                return new NaverShoppingResponse();
             }
 
             Element channel = (Element) channelList.item(0);
 
-            // total 추출
             String totalText = getTagValue("total", channel);
             Integer total = totalText != null ? Integer.parseInt(totalText) : 0;
 
@@ -142,7 +222,6 @@ public class NaverShoppingApiClient {
             String displayText = getTagValue("display", channel);
             Integer display = displayText != null ? Integer.parseInt(displayText) : 0;
 
-            // items 추출
             NodeList itemList = channel.getElementsByTagName("item");
             List<NaverShoppingResponse.NaverShoppingItem> items = new ArrayList<>();
 
@@ -165,41 +244,32 @@ public class NaverShoppingApiClient {
 
         } catch (Exception e) {
             log.error("XML 파싱 오류", e);
-            return null;
+            return new NaverShoppingResponse();
         }
     }
 
-    /**
-     * XML item 파싱
-     */
     private NaverShoppingResponse.NaverShoppingItem parseXmlItem(Element item) {
-        NaverShoppingResponse.NaverShoppingItem product = new NaverShoppingResponse.NaverShoppingItem();
+        NaverShoppingResponse.NaverShoppingItem product =
+                new NaverShoppingResponse.NaverShoppingItem();
 
-        // HTML 태그 제거
         String title = removeHtmlTags(getTagValue("title", item));
         product.setTitle(title);
 
-        // 가격 정보
         String lpriceText = getTagValue("lprice", item);
         String hpriceText = getTagValue("hprice", item);
 
         product.setLprice(lpriceText != null ? lpriceText : "0");
         product.setHprice(hpriceText != null ? hpriceText : "0");
 
-        // 브랜드
         String brand = getTagValue("brand", item);
         product.setBrand(brand);
 
-        // 이미지 및 기타 정보
         product.setImage(getTagValue("image", item));
         product.setProductId(getTagValue("productId", item));
 
         return product;
     }
 
-    /**
-     * XML 태그 값 추출
-     */
     private String getTagValue(String tag, Element element) {
         try {
             NodeList nodeList = element.getElementsByTagName(tag);
@@ -216,66 +286,10 @@ public class NaverShoppingApiClient {
         return null;
     }
 
-    /**
-     * HTML 태그 제거
-     */
     private String removeHtmlTags(String text) {
         if (text == null) {
             return "";
         }
         return text.replaceAll("<[^>]*>", "");
-    }
-
-    /**
-     * 여러 페이지 검색
-     */
-    public NaverShoppingResponse searchMultiplePages(String keyword, int totalCount, int display, String sort) {
-        log.info("🔍 '{}'로 {}개 상품 수집 시작", keyword, totalCount);
-
-        NaverShoppingResponse combinedResponse = new NaverShoppingResponse();
-        combinedResponse.setItems(new ArrayList<>());
-
-        int pages = (totalCount + display - 1) / display;
-
-        for (int page = 0; page < pages; page++) {
-            int start = page * display + 1;
-
-            // 1000개 제한 체크
-            if (start > 1000) {
-                log.warn("네이버 API는 최대 1000개까지만 조회 가능합니다.");
-                break;
-            }
-
-            log.info("페이지 {}/{} (start={})", page + 1, pages, start);
-
-            NaverShoppingResponse response = searchProducts(keyword, display, start, sort);
-
-            if (response != null && response.getItems() != null && !response.getItems().isEmpty()) {
-                combinedResponse.getItems().addAll(response.getItems());
-
-                if (combinedResponse.getTotal() == null) {
-                    combinedResponse.setTotal(response.getTotal());
-                }
-
-                log.info("현재까지 수집: {}개", combinedResponse.getItems().size());
-
-                // 목표 개수 도달 시 종료
-                if (combinedResponse.getItems().size() >= totalCount) {
-                    break;
-                }
-            }
-
-            // API 호출 간격
-            try {
-                Thread.sleep(requestDelay);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
-
-        log.info("총 {}개의 상품 정보를 수집했습니다.", combinedResponse.getItems().size());
-
-        return combinedResponse;
     }
 }
