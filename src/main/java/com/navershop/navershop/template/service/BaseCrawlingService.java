@@ -13,6 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * 범용 크롤링 서비스 추상 클래스 (Core - 수정 금지)
@@ -42,130 +46,172 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
         this.optionGenerator = optionGenerator;
     }
 
-    @Transactional
-    public CrawlingResult crawlAllCategories(Long userId, int productsPerCategory) {
-        log.info("===== 전체 카테고리 크롤링 시작 =====");
+    /**
+     * 🚀 최고 성능: Reactive 방식
+     *
+     * 특징:
+     * - WebClient의 Non-blocking I/O 활용
+     * - 가장 빠른 성능
+     * - 메모리 효율적
+     */
+    public CrawlingResult crawlAllCategoriesReactive(Long userId, int productsPerCategory) {
+        log.info("===== 🚀 Reactive 크롤링 시작 =====");
+        long startTime = System.currentTimeMillis();
 
         USER adminUser = userProvider.findById(userId);
         List<CATEGORY> targetCategories = findLeafCategories();
         log.info("검색 대상 카테고리 수: {}", targetCategories.size());
 
-        int totalProducts = 0;
-        int successCategories = 0;
-        int failedCategories = 0;
+        AtomicInteger totalProducts = new AtomicInteger(0);
+        AtomicInteger successCategories = new AtomicInteger(0);
+        AtomicInteger failedCategories = new AtomicInteger(0);
+        Map<Long, CategoryResult> categoryResults = new ConcurrentHashMap<>();
 
-        List<CategoryResult> categoryResults = new ArrayList<>();
+        // CompletableFuture로 병렬 처리 (Reactive와 호환)
+        List<CompletableFuture<Void>> futures = targetCategories.stream()
+                .map(category -> CompletableFuture.runAsync(() -> {
+                    Long categoryId = categoryProvider.getCategoryId(category);
+                    String categoryName = categoryProvider.getCategoryName(category);
 
-        for (CATEGORY category : targetCategories) {
-            String categoryName = categoryProvider.getCategoryName(category);
+                    try {
+                        log.info("카테고리 '{}' 크롤링 시작... [Thread: {}]",
+                                categoryName, Thread.currentThread().getName());
 
-            try {
-                log.info("카테고리 '{}' 크롤링 시작...", categoryName);
+                        // Reactive 방식으로 크롤링
+                        int savedCount = crawlAndSaveByCategoryReactive(
+                                category, adminUser, productsPerCategory);
 
-                int savedCount = crawlAndSaveByCategory(
-                        category, adminUser, productsPerCategory
-                );
+                        if (savedCount > 0) {
+                            categoryResults.put(categoryId, CategoryResult.success(
+                                    categoryId, categoryName, savedCount));
+                            totalProducts.addAndGet(savedCount);
+                            successCategories.incrementAndGet();
+                            log.info("카테고리 '{}' 완료: {}개 저장", categoryName, savedCount);
+                        } else {
+                            categoryResults.put(categoryId, CategoryResult.noResults(
+                                    categoryId, categoryName));
+                            log.warn("카테고리 '{}'에서 검색 결과 없음", categoryName);
+                        }
 
-                if (savedCount > 0) {
-                    categoryResults.add(CategoryResult.success(
-                            categoryProvider.getCategoryId(category),
-                            categoryName,
-                            savedCount
-                    ));
+                    } catch (Exception e) {
+                        log.error("카테고리 '{}' 크롤링 실패: {}", categoryName, e.getMessage(), e);
+                        categoryResults.put(categoryId, CategoryResult.failed(
+                                categoryId, categoryName, e.getMessage()));
+                        failedCategories.incrementAndGet();
+                    }
+                }))
+                .collect(Collectors.toList());
 
-                    totalProducts += savedCount;
-                    successCategories++;
+        // 모든 작업 완료 대기
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
-                    log.info("카테고리 '{}' 완료: {}개 저장", categoryName, savedCount);
-                } else {
-                    categoryResults.add(CategoryResult.noResults(
-                            categoryProvider.getCategoryId(category),
-                            categoryName
-                    ));
+        long endTime = System.currentTimeMillis();
+        long duration = (endTime - startTime) / 1000;
 
-                    log.warn("카테고리 '{}'에서 검색 결과 없음", categoryName);
-                }
-
-                Thread.sleep(200);
-
-            } catch (Exception e) {
-                log.error("카테고리 '{}' 크롤링 실패: {}", categoryName, e.getMessage(), e);
-
-                categoryResults.add(CategoryResult.failed(
-                        categoryProvider.getCategoryId(category),
-                        categoryName,
-                        e.getMessage()
-                ));
-
-                failedCategories++;
-            }
-        }
-
-        log.info("===== 전체 카테고리 크롤링 완료 =====");
-        log.info("총 카테고리: {}, 성공: {}, 실패: {}, 총 상품: {}",
-                targetCategories.size(), successCategories, failedCategories, totalProducts);
+        log.info("===== ✅ Reactive 크롤링 완료 =====");
+        log.info("총 카테고리: {}, 성공: {}, 실패: {}, 총 상품: {}, 소요시간: {}초",
+                targetCategories.size(), successCategories.get(), failedCategories.get(),
+                totalProducts.get(), duration);
 
         return CrawlingResult.builder()
                 .totalCategories(targetCategories.size())
-                .successCategories(successCategories)
-                .failedCategories(failedCategories)
-                .totalProducts(totalProducts)
-                .categoryResults(categoryResults)
+                .successCategories(successCategories.get())
+                .failedCategories(failedCategories.get())
+                .totalProducts(totalProducts.get())
+                .durationSeconds(duration)
+                .categoryResults(new ArrayList<>(categoryResults.values()))
                 .build();
     }
 
-    protected int crawlAndSaveByCategory(CATEGORY category, USER seller, int count) {
+    /**
+     * 카테고리별 크롤링 (Reactive 방식)
+     */
+    @Transactional
+    protected int crawlAndSaveByCategoryReactive(CATEGORY category, USER seller, int count) {
         String categoryName = categoryProvider.getCategoryName(category);
-
-        // 상위 카테고리를 포함한 전체 경로로 검색 키워드 생성
         String keyword = buildFullCategoryPath(category);
 
         log.info("검색 키워드: '{}' (카테고리: '{}')", keyword, categoryName);
 
         int display = Math.min(count, 100);
-        NaverShoppingResponse response = apiClient.searchMultiplePages(keyword, count, display, "sim");
+
+        // 🚀 Reactive 방식으로 API 호출
+        NaverShoppingResponse response = apiClient.searchMultiplePagesReactive(
+                keyword, count, display, "sim");
 
         if (response == null || response.getItems() == null || response.getItems().isEmpty()) {
             return 0;
         }
 
-        List<PRODUCT> products = new ArrayList<>();
-        int itemsToProcess = Math.min(response.getItems().size(), count);
+        // 병렬 스트림으로 Product 변환
+        List<PRODUCT> products = response.getItems().stream()
+                .limit(count)
+                .parallel()
+                .map(item -> {
+                    PRODUCT product = productMapper.map(item, category, seller);
 
-        for (int i = 0; i < itemsToProcess; i++) {
-            NaverShoppingResponse.NaverShoppingItem item = response.getItems().get(i);
-            PRODUCT product = productMapper.map(item, category, seller);
-            products.add(product);
-        }
+                    // 옵션 생성
+                    if (optionGenerator != null && optionGenerator.needsOptions(categoryName)) {
+                        optionGenerator.generateAndAddOptions(product, categoryName);
+                    }
+
+                    return product;
+                })
+                .collect(Collectors.toList());
 
         log.info("{}개 상품 변환 완료", products.size());
 
-        if (optionGenerator != null && optionGenerator.needsOptions(categoryName)) {
-            log.info("옵션 생성 중...");
-            for (PRODUCT product : products) {
-                optionGenerator.generateAndAddOptions(product, categoryName);
-            }
-        }
-
-        log.info("상품 저장 중...");
-        return productProvider.saveAll(products);
+        // 배치 저장
+        return saveProductsBatch(products);
     }
 
     /**
-     * 리프 노드(최하위) 카테고리만 조회
-     *
-     * 예시:
-     * - 가구 (부모)
-     *   - 침대 (자식) ← 선택됨
-     *   - 소파 (자식) ← 선택됨
-     * - 유아 (부모)
-     *   - 침구 (자식) ← 선택됨
+     * 배치 저장
+     */
+    protected int saveProductsBatch(List<PRODUCT> products) {
+        if (products.isEmpty()) {
+            return 0;
+        }
+
+        log.info("💾 배치 저장 중... ({}개)", products.size());
+
+        // 중복 체크를 병렬로 수행
+        List<PRODUCT> nonDuplicates = products.stream()
+                .parallel()
+                .filter(product -> !productProvider.isDuplicate(product))
+                .collect(Collectors.toList());
+
+        log.info("중복 제거 후: {}개", nonDuplicates.size());
+
+        // 배치 저장
+        int savedCount = 0;
+        int batchSize = 50;
+
+        for (int i = 0; i < nonDuplicates.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, nonDuplicates.size());
+            List<PRODUCT> batch = nonDuplicates.subList(i, end);
+
+            try {
+                for (PRODUCT product : batch) {
+                    productProvider.save(product);
+                    savedCount++;
+                }
+                log.debug("배치 저장 완료: {}-{}", i, end);
+            } catch (Exception e) {
+                log.error("배치 저장 실패: {}-{}", i, end, e);
+            }
+        }
+
+        return savedCount;
+    }
+
+    /**
+     * 리프 노드 카테고리 조회
      */
     protected List<CATEGORY> findLeafCategories() {
         List<CATEGORY> allCategories = categoryProvider.findAllCategories();
         Set<Long> parentIds = new HashSet<>();
 
-        // 1. 부모 카테고리 ID들을 모두 수집
         for (CATEGORY category : allCategories) {
             Long parentId = categoryProvider.getParentCategoryId(category);
             if (parentId != null) {
@@ -173,32 +219,23 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
             }
         }
 
-        // 2. 자식이 없는 카테고리만 필터링 (리프 노드)
-        List<CATEGORY> leafCategories = new ArrayList<>();
-        for (CATEGORY category : allCategories) {
-            Long categoryId = categoryProvider.getCategoryId(category);
-            if (!parentIds.contains(categoryId)) {
-                leafCategories.add(category);
-            }
-        }
+        List<CATEGORY> leafCategories = allCategories.stream()
+                .filter(category -> !parentIds.contains(
+                        categoryProvider.getCategoryId(category)))
+                .collect(Collectors.toList());
 
-        log.info("전체 카테고리: {}개, 리프 카테고리: {}개", allCategories.size(), leafCategories.size());
+        log.info("전체 카테고리: {}개, 리프 카테고리: {}개",
+                allCategories.size(), leafCategories.size());
         return leafCategories;
     }
 
     /**
-     * 상위 카테고리를 포함한 전체 경로 생성
-     *
-     * 예시:
-     * - 유아 > 침구 → "유아 침구"
-     * - 가구 > 침실 > 침대 → "가구 침실 침대"
-     * - 주방용품 → "주방용품" (부모 없음)
+     * 전체 카테고리 경로 생성
      */
     protected String buildFullCategoryPath(CATEGORY category) {
         List<String> pathNames = new ArrayList<>();
         CATEGORY current = category;
 
-        // 현재 카테고리부터 최상위 부모까지 역순으로 수집
         while (current != null) {
             String name = categoryProvider.getCategoryName(current);
             pathNames.add(name);
@@ -211,13 +248,8 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
             }
         }
 
-        // 역순으로 수집했으므로 뒤집기 (최상위 부모 → 현재 카테고리 순서)
         Collections.reverse(pathNames);
-
-        // 공백으로 연결하여 검색 키워드 생성
         String fullPath = String.join(" ", pathNames);
-
-        // 특수문자 정리
         return sanitizeKeyword(fullPath);
     }
 
@@ -229,7 +261,7 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
                 .replace("·", " ")
                 .replace("、", " ")
                 .replace("，", " ")
-                .replaceAll("\\s+", " ")  // 연속된 공백을 하나로
+                .replaceAll("\\s+", " ")
                 .trim();
     }
 
@@ -240,6 +272,7 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
         private Integer successCategories;
         private Integer failedCategories;
         private Integer totalProducts;
+        private Long durationSeconds;
         private List<CategoryResult> categoryResults;
     }
 
