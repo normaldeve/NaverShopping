@@ -34,6 +34,6 @@ public class ProductCrawlingController {
         log.info("크롤링 시작: adminUserId={}, productsPerCategory={}",
                 userId, productsPerCategory);
 
-        return crawlingService.crawlAllCategories(userId, productsPerCategory);
+        return crawlingService.crawlAllCategoriesReactive(userId, productsPerCategory);
     }
 }
