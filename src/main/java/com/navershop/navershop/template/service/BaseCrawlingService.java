@@ -16,7 +16,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * 범용 크롤링 서비스 추상 클래스 (Core - 수정 금지)
@@ -46,14 +45,6 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
         this.optionGenerator = optionGenerator;
     }
 
-    /**
-     * 🚀 최고 성능: Reactive 방식
-     *
-     * 특징:
-     * - WebClient의 Non-blocking I/O 활용
-     * - 가장 빠른 성능
-     * - 메모리 효율적
-     */
     public CrawlingResult crawlAllCategoriesReactive(Long userId, int productsPerCategory) {
         log.info("===== 🚀 Reactive 크롤링 시작 =====");
         long startTime = System.currentTimeMillis();
@@ -100,7 +91,7 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
                         failedCategories.incrementAndGet();
                     }
                 }))
-                .collect(Collectors.toList());
+                .toList();
 
         // 모든 작업 완료 대기
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -157,7 +148,7 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
 
                     return product;
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         log.info("{}개 상품 변환 완료", products.size());
 
@@ -179,7 +170,7 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
         List<PRODUCT> nonDuplicates = products.stream()
                 .parallel()
                 .filter(product -> !productProvider.isDuplicate(product))
-                .collect(Collectors.toList());
+                .toList();
 
         log.info("중복 제거 후: {}개", nonDuplicates.size());
 
@@ -222,7 +213,7 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
         List<CATEGORY> leafCategories = allCategories.stream()
                 .filter(category -> !parentIds.contains(
                         categoryProvider.getCategoryId(category)))
-                .collect(Collectors.toList());
+                .toList();
 
         log.info("전체 카테고리: {}개, 리프 카테고리: {}개",
                 allCategories.size(), leafCategories.size());
