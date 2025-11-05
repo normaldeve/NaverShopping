@@ -80,7 +80,7 @@ public class NaverShoppingApiClient {
     public Mono<NaverShoppingResponse> searchProductsReactive(
             String keyword, int display, int start, String sort) {
 
-        log.debug("비동기 검색: {} (start={})", keyword, start);
+        log.info("비동기 검색: {} (start={})", keyword, start);
 
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -281,7 +281,7 @@ public class NaverShoppingApiClient {
                 }
             }
         } catch (Exception e) {
-            log.debug("태그 추출 실패: {}", tag);
+            log.info("태그 추출 실패: {}", tag);
         }
         return null;
     }

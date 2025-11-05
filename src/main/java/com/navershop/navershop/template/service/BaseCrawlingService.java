@@ -188,7 +188,7 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
                     productProvider.save(product);
                     savedCount++;
                 }
-                log.debug("배치 저장 완료: {}-{}", i, end);
+                log.info("배치 저장 완료: {}-{}", i, end);
             } catch (Exception e) {
                 log.error("배치 저장 실패: {}-{}", i, end, e);
             }
