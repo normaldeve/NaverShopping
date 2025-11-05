@@ -16,7 +16,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * WebClient를 사용하는 크롤링 서비스
@@ -100,7 +99,7 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
                         failedCategories.incrementAndGet();
                     }
                 }))
-                .collect(Collectors.toList());
+                .toList();
 
         // 모든 작업 완료 대기
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -157,7 +156,7 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
 
                     return product;
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         log.info("{}개 상품 변환 완료", products.size());
 
@@ -214,7 +213,7 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
         List<CATEGORY> leafCategories = allCategories.stream()
                 .filter(category -> !parentIds.contains(
                         categoryProvider.getCategoryId(category)))
-                .collect(Collectors.toList());
+                .toList();
 
         log.info("전체 카테고리: {}개, 리프 카테고리: {}개",
                 allCategories.size(), leafCategories.size());
