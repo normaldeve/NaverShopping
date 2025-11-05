@@ -119,18 +119,6 @@
         <appender-ref ref="ASYNC_ERROR_FILE"/>
     </logger>
 
-    <!-- Hibernate SQL 로그 (선택사항) -->
-    <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-    </logger>
-
-    <!-- Hibernate SQL 파라미터 로그 (선택사항) -->
-    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-    </logger>
-
     <!-- Spring Framework 로그 -->
     <logger name="org.springframework" level="INFO"/>
 
