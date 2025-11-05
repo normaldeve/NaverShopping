@@ -1,5 +1,6 @@
 package com.navershop.navershop.core.api;
 
+import com.navershop.navershop.config.NaverApiLimiterConfig;
 import com.navershop.navershop.core.dto.NaverShoppingResponse;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
@@ -38,12 +39,14 @@ import java.util.List;
 public class NaverShoppingApiClient {
 
     private final WebClient webClient;
+    private final RateLimiter rateLimiter;
 
     @Value("${naver.api.request-delay:100}")
     private int requestDelay;
 
-    public NaverShoppingApiClient(WebClient webClient) {
+    public NaverShoppingApiClient(WebClient webClient, RateLimiter rateLimiter) {
         this.webClient = webClient;
+        this.rateLimiter = rateLimiter;
     }
 
     /**
@@ -66,8 +69,27 @@ public class NaverShoppingApiClient {
                 .bodyToMono(String.class)
                 .timeout(Duration.ofSeconds(10))
                 .map(this::parseXmlResponse)
-                .doOnError(WebClientResponseException.class, this::handleWebClientError)
-                .onErrorReturn(new NaverShoppingResponse());  // 에러 시 빈 응답
+                .doOnError(WebClientResponseException.class, e -> {
+                    int status = e.getStatusCode().value();
+                    if (status == 429) {
+                        log.warn("⚠️ 429 Too Many Requests 발생 — 대기 후 재시도 예정");
+                    } else {
+                        log.error("API 에러 {}: {}", status, e.getResponseBodyAsString());
+                    }
+                    throw e;
+                })
+                .retryWhen(
+                        Retry.backoff(3, Duration.ofSeconds(2))
+                                .filter(e -> e instanceof WebClientResponseException)
+                                .doBeforeRetry(sig ->
+                                        log.warn("🔁 재시도 {}/3 (이전 에러: {})",
+                                                sig.totalRetries() + 1,
+                                                sig.failure().getMessage()))
+                )
+                .onErrorResume(e -> {
+                    log.warn("🚨 3회 재시도 후 실패: {}", e.getMessage());
+                    return Mono.just(new NaverShoppingResponse()); // fallback
+                });
     }
 
     /**
@@ -84,31 +106,32 @@ public class NaverShoppingApiClient {
         int pages = (totalCount + display - 1) / display;
         int maxPages = Math.min(pages, 1000 / display);
 
-        // ✅ 초당 5회 이하 호출 제한 (1초마다 갱신)
-        RateLimiterConfig limiterConfig = RateLimiterConfig.custom()
-                .limitForPeriod(5)
-                .limitRefreshPeriod(Duration.ofSeconds(1))
-                .timeoutDuration(Duration.ofSeconds(2))
-                .build();
+        int concurrency = 3; // 병렬 처리 개수 제한
 
-        RateLimiter limiter = RateLimiter.of("naver-api", limiterConfig);
+        log.info("🚀 Reactive 병렬 검색 시작: '{}' (pages={}, concurrency={})",
+                keyword, maxPages, concurrency);
 
         List<NaverShoppingResponse> responses = Flux.range(0, maxPages)
                 .flatMap(page ->
-                        Mono.fromCallable(() -> {
-                                    RateLimiter.waitForPermission(limiter);
-                                    return page;
-                                })
-                                .flatMap(p -> {
-                                    int start = p * display + 1;
-                                    return searchProductsReactive(keyword, display, start, sort)
-                                            .retryWhen(Retry.backoff(3, Duration.ofSeconds(2)));
-                                })
-                )
+                                Mono.fromCallable(() -> {
+                                            RateLimiter.waitForPermission(rateLimiter);
+                                            return page;
+                                        })
+                                        .flatMap(p -> {
+                                            int start = p * display + 1;
+                                            log.info("🟢 요청 시작: {} (page={}, start={})", keyword, p, start);
+                                            return searchProductsReactive(keyword, display, start, sort);
+                                        })
+                                        .subscribeOn(Schedulers.parallel())
+                        , concurrency)
                 .collectList()
                 .block();
 
-        return mergeResponses(responses, totalCount);
+        NaverShoppingResponse result = mergeResponses(responses, totalCount);
+        log.info("✅ Reactive 검색 완료: {}개 수집 (keyword={})",
+                result.getItems() != null ? result.getItems().size() : 0, keyword);
+
+        return result;
     }
 
     /**
