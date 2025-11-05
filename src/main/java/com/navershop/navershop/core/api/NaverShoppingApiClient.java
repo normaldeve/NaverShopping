@@ -1,6 +1,7 @@
 package com.navershop.navershop.core.api;
 
 import com.navershop.navershop.core.dto.NaverShoppingResponse;
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,12 +17,7 @@ import reactor.core.scheduler.Schedulers;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -32,12 +28,14 @@ import java.util.List;
 public class NaverShoppingApiClient {
 
     private final WebClient webClient;
+    private final RateLimiter rateLimiter;
 
     @Value("${naver.api.request-delay:100}")
     private int requestDelay;
 
-    public NaverShoppingApiClient(WebClient webClient) {
+    public NaverShoppingApiClient(WebClient webClient, RateLimiter rateLimiter) {
         this.webClient = webClient;
+        this.rateLimiter = rateLimiter;
     }
 
     /**
@@ -112,31 +110,32 @@ public class NaverShoppingApiClient {
         int pages = (totalCount + display - 1) / display;
         int maxPages = Math.min(pages, 1000 / display);  // API 제한
 
-        // 모든 페이지를 병렬로 요청
+        int concurrency = 3; // 병렬 처리 개수 제한
+
+        log.info("🚀 Reactive 병렬 검색 시작: '{}' (pages={}, concurrency={})",
+                keyword, maxPages, concurrency);
+
         List<NaverShoppingResponse> responses = Flux.range(0, maxPages)
-                .parallel()  // 병렬 처리
-                .runOn(Schedulers.parallel())  // 병렬 스케줄러 사용
-                .flatMap(page -> {
-                    int start = page * display + 1;
-
-                    // 요청 간격 조절 (Rate Limiting)
-                    return Mono.delay(Duration.ofMillis(requestDelay * page))
-                            .then(searchProductsReactive(keyword, display, start, sort))
-                            .retry(2);  // 실패 시 2번 재시도
-                })
-                .sequential()  // 다시 순차로 변환
+                .flatMap(page ->
+                                Mono.fromCallable(() -> {
+                                            RateLimiter.waitForPermission(rateLimiter);
+                                            return page;
+                                        })
+                                        .flatMap(p -> {
+                                            int start = p * display + 1;
+                                            log.info("🟢 요청 시작: {} (page={}, start={})", keyword, p, start);
+                                            return searchProductsReactive(keyword, display, start, sort);
+                                        })
+                                        .subscribeOn(Schedulers.parallel())
+                        , concurrency)
                 .collectList()
-                .block();  // 모든 요청이 완료될 때까지 대기
+                .block();
 
-        // 결과 병합
-        NaverShoppingResponse combinedResponse = mergeResponses(responses, totalCount);
+        NaverShoppingResponse result = mergeResponses(responses, totalCount);
+        log.info("✅ Reactive 검색 완료: {}개 수집 (keyword={})",
+                result.getItems() != null ? result.getItems().size() : 0, keyword);
 
-        long endTime = System.currentTimeMillis();
-        log.info("✅ Reactive 검색 완료: {}개 수집, 소요시간: {}ms",
-                combinedResponse.getItems() != null ? combinedResponse.getItems().size() : 0,
-                endTime - startTime);
-
-        return combinedResponse;
+        return result;
     }
 
     /**
