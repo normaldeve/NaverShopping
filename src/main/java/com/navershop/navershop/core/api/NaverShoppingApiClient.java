@@ -39,38 +39,9 @@ public class NaverShoppingApiClient {
     }
 
     /**
-     * 단일 페이지 검색 (동기 방식)
-     */
-    public NaverShoppingResponse searchProducts(String keyword, int display, int start, String sort) {
-        log.info("'{}' 검색 중... (start={}, display={})", keyword, start, display);
-
-        try {
-            String xmlResponse = webClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/v1/search/shop.xml")
-                            .queryParam("query", keyword)
-                            .queryParam("display", display)
-                            .queryParam("start", start)
-                            .queryParam("sort", sort)
-                            .build())
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .timeout(Duration.ofSeconds(10))
-                    .block();  // 동기로 변환
-
-            return parseXmlResponse(xmlResponse);
-
-        } catch (WebClientResponseException e) {
-            handleWebClientError(e);
-            return null;
-        } catch (Exception e) {
-            log.error("API 호출 오류: {}", e.getMessage(), e);
-            return null;
-        }
-    }
-
-    /**
-     * 단일 페이지 검색 (비동기 방식 - Reactive)
+     * display = 한 페이지에 보여질 상품 개수 (최대 100)
+     * start = 크롤링할 시작 상품 번호 (최대 1000)
+     * 단일 페이지 검색
      */
     public Mono<NaverShoppingResponse> searchProductsReactive(
             String keyword, int display, int start, String sort) {
@@ -94,7 +65,8 @@ public class NaverShoppingApiClient {
     }
 
     /**
-     * 여러 페이지 병렬 검색 (Reactive - 최고 성능)
+     * 여러 페이지 병렬 검색
+     * 단일 페이지에서 100개를 얻는다 * 10번 반복 = 총 1000개 상품 가져옴
      *
      * 특징:
      * - 모든 페이지를 동시에 요청
@@ -103,9 +75,6 @@ public class NaverShoppingApiClient {
      */
     public NaverShoppingResponse searchMultiplePagesReactive(
             String keyword, int totalCount, int display, String sort) {
-
-        log.info("🚀 Reactive 병렬 검색 시작: '{}'로 {}개 상품 수집", keyword, totalCount);
-        long startTime = System.currentTimeMillis();
 
         int pages = (totalCount + display - 1) / display;
         int maxPages = Math.min(pages, 1000 / display);  // API 제한

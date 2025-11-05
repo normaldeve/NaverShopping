@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 범용 크롤링 서비스 추상 클래스 (Core - 수정 금지)
+ * 범용 크롤링 서비스 추상 클래스
  */
 @Slf4j
 public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
@@ -115,7 +115,7 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
     }
 
     /**
-     * 카테고리별 크롤링 (Reactive 방식)
+     * 카테고리별 크롤링
      */
     @Transactional
     protected int crawlAndSaveByCategoryReactive(CATEGORY category, USER seller, int count) {
@@ -124,6 +124,7 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
 
         log.info("검색 키워드: '{}' (카테고리: '{}')", keyword, categoryName);
 
+        // 볼 수 있는 상품의 최대값은 100개이다
         int display = Math.min(count, 100);
 
         // 🚀 Reactive 방식으로 API 호출
