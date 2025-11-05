@@ -44,37 +44,6 @@ public class NaverShoppingApiClient {
     }
 
     /**
-     * 단일 페이지 검색 (동기 방식)
-     */
-    public NaverShoppingResponse searchProducts(String keyword, int display, int start, String sort) {
-        log.info("'{}' 검색 중... (start={}, display={})", keyword, start, display);
-
-        try {
-            String xmlResponse = webClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/v1/search/shop.xml")
-                            .queryParam("query", keyword)
-                            .queryParam("display", display)
-                            .queryParam("start", start)
-                            .queryParam("sort", sort)
-                            .build())
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .timeout(Duration.ofSeconds(10))
-                    .block();  // 동기로 변환
-
-            return parseXmlResponse(xmlResponse);
-
-        } catch (WebClientResponseException e) {
-            handleWebClientError(e);
-            return null;
-        } catch (Exception e) {
-            log.error("API 호출 오류: {}", e.getMessage(), e);
-            return null;
-        }
-    }
-
-    /**
      * 단일 페이지 검색 (비동기 방식 - Reactive)
      */
     public Mono<NaverShoppingResponse> searchProductsReactive(
