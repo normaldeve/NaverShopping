@@ -175,8 +175,6 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
 
         log.info("💾 배치 저장 중... ({}개)", products.size());
 
-        log.info("중복 제거 후: {}개", products.size());
-
         // 배치 저장
         int savedCount = 0;
         int batchSize = 50;
