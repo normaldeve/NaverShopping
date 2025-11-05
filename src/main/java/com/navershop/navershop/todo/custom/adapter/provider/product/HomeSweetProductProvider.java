@@ -18,11 +18,6 @@ public class HomeSweetProductProvider implements ProductProvider<Product> {
     private final ProductRepository productRepository;
 
     @Override
-    public boolean isDuplicate(Product product) {
-        return productRepository.existsBySellerAndName(product.getSeller(), product.getName());
-    }
-
-    @Override
     public Product save(Product product) {
         try {
             Product saved = productRepository.save(product);

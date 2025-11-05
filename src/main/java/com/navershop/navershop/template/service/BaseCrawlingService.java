@@ -175,21 +175,15 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
 
         log.info("💾 배치 저장 중... ({}개)", products.size());
 
-        // 중복 체크를 병렬로 수행
-        List<PRODUCT> nonDuplicates = products.stream()
-                .parallel()
-                .filter(product -> !productProvider.isDuplicate(product))
-                .collect(Collectors.toList());
-
-        log.info("중복 제거 후: {}개", nonDuplicates.size());
+        log.info("중복 제거 후: {}개", products.size());
 
         // 배치 저장
         int savedCount = 0;
         int batchSize = 50;
 
-        for (int i = 0; i < nonDuplicates.size(); i += batchSize) {
-            int end = Math.min(i + batchSize, nonDuplicates.size());
-            List<PRODUCT> batch = nonDuplicates.subList(i, end);
+        for (int i = 0; i < products.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, products.size());
+            List<PRODUCT> batch = products.subList(i, end);
 
             try {
                 for (PRODUCT product : batch) {
