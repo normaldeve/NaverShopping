@@ -29,13 +29,22 @@ public class SofaNamingStrategy implements ProductNamingStrategy {
 
     // 인원 - 모든 조합
     private static final List<String> SIZES = Arrays.asList(
-            "1인용", "2인용", "3인용", "4인용", "코너형"
+            "1인용", "2인용", "3인용", "4인용", "5인용", "6인용"
     );
 
     // 재질 - 모든 조합
     private static final List<String> MATERIALS = Arrays.asList(
             "패브릭", "천연가죽", "인조가죽", "벨벳", "린넨",
-            "마이크로화이버", "스웨이드", "코듀로이"
+            "마이크로화이버", "스웨이드", "코듀로이", "샤무드", "아쿠아클린"
+    );
+
+    private static final List<String> SHAPES = Arrays.asList(
+            "일자형", "카우치형", "코너형", "모듈형", "좌식형", "침대형"
+    );
+
+    // 쿠션감
+    private static final List<String> FLUFFY = Arrays.asList(
+            "푹신한", "약간 푹신한", "약간 하드한", "하드한"
     );
 
     @Override
@@ -64,12 +73,16 @@ public class SofaNamingStrategy implements ProductNamingStrategy {
 
         for (String size : SIZES) {
             for (String material : MATERIALS) {
-                String descriptor = getRandomItem(DESCRIPTORS);
+                for (String shape : SHAPES) {
+                    for (String fluffy : FLUFFY) {
+                        String descriptor = getRandomItem(DESCRIPTORS);
 
-                String productName = String.format("%s %s %s %s %s",
-                        brand, descriptor, size, material, categoryName);
+                        String productName = String.format("%s %s %s %s %s %s %s",
+                                brand, descriptor, size, material, shape, fluffy, categoryName);
 
-                allCombinations.add(productName);
+                        allCombinations.add(productName);
+                    }
+                }
             }
         }
 

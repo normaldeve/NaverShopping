@@ -59,13 +59,6 @@ public enum BrandCatalog {
             "이너조깅", "레나에너지", "펫플랜트", "헬로프로그", "애시드로우"
     )),
 
-    COLOR(Arrays.asList(
-            "화이트", "블랙", "브라운", "골드", "오렌지",
-            "그린", "네이비", "핑크", "투명", "그레이",
-            "베이지", "실버", "레드", "옐로우", "블루",
-            "바이올렛", "멀티(혼합)", "카키", "아이보리", "스카이블루"
-    )),
-
     STORAGE(Arrays.asList(
             "상도가구", "MF매직하우스", "진심감성", "얼라이브즈", "네이쳐리빙",
             "레어로우", "퓨어셀", "아이리스코리아", "레트로하우스", "위즈홈",
@@ -152,8 +145,7 @@ public enum BrandCatalog {
     public static BrandCatalog fromCategoryName(String categoryName) {
         // "가구" 카테고리면 FURNITURE 반환
         if (categoryName != null) {
-            if (categoryName.contains("가구") || categoryName.contains("침대") ||
-                    categoryName.contains("소파") || categoryName.contains("책상")) {
+            if (categoryName.contains("가구")) {
                 return FURNITURE;
             }
             if (categoryName.contains("패브릭") || categoryName.contains("커튼")) {

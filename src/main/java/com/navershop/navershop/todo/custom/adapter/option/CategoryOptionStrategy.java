@@ -6,9 +6,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -21,7 +19,7 @@ public class CategoryOptionStrategy {
 
     static {
         // 침대 카테고리
-        CATEGORY_CONFIGS.put("침대", CategoryOptionConfig.builder()
+        CATEGORY_CONFIGS.put("침대프레임", CategoryOptionConfig.builder()
                 .optionGroups(List.of(
                         OptionGroupConfig.of("옵션", List.of(
                                 OptionValueConfig.of("USB포트", 15000, 100L),
@@ -40,16 +38,20 @@ public class CategoryOptionStrategy {
         // 소파 카테고리
         CATEGORY_CONFIGS.put("소파", CategoryOptionConfig.builder()
                 .optionGroups(List.of(
-                        OptionGroupConfig.of("인원", List.of(
-                                OptionValueConfig.of("1인용", 0, 80L),
-                                OptionValueConfig.of("2인용", 100000, 60L),
-                                OptionValueConfig.of("3인용", 200000, 40L)
+                        OptionGroupConfig.of("부가기능", List.of(
+                                OptionValueConfig.of("양쪽팔걸이형", 200000, 80L),
+                                OptionValueConfig.of("스크래치방지", 100000, 60L),
+                                OptionValueConfig.of("머리받침각도조절", 80000, 40L),
+                                OptionValueConfig.of("방수", 30000, 40L),
+                                OptionValueConfig.of("진드기방지", 10000, 40L)
+
                         )),
-                        OptionGroupConfig.of("재질", List.of(
-                                OptionValueConfig.of("패브릭", 0, 50L),
-                                OptionValueConfig.of("천연가죽", 300000, 30L),
-                                OptionValueConfig.of("인조가죽", 150000, 40L)
-                        ))
+                        OptionGroupConfig.of("구성", List.of(
+                                OptionValueConfig.of("소파단품", 0, 50L),
+                                OptionValueConfig.of("쿠션포함", 10000, 30L),
+                                OptionValueConfig.of("카우치포함", 15000, 40L)
+                        )),
+                        OptionGroupConfig.of("색상", randomColorOptions(6))
                 ))
                 .build());
 
@@ -158,6 +160,22 @@ public class CategoryOptionStrategy {
     }
 
     // ============ 내부 설정 클래스들 ============
+
+    private static final List<String> AVAILABLE_COLORS = List.of(
+            "화이트", "블랙", "브라운", "골드", "오렌지", "그린",
+            "네이비", "핑크", "그레이", "베이지", "실버",
+            "레드", "옐로우", "블루", "바이올렛", "멀티(혼합)"
+    );
+
+    private static List<OptionValueConfig> randomColorOptions(int count) {
+        List<String> shuffled = new ArrayList<>(AVAILABLE_COLORS);
+        Collections.shuffle(shuffled); // 랜덤 섞기
+
+        return shuffled.stream()
+                .limit(count)
+                .map(color -> OptionValueConfig.of(color, 0, 50L))
+                .toList();
+    }
 
     @Builder
     @Getter
