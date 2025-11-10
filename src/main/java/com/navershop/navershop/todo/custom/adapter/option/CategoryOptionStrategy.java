@@ -17,6 +17,22 @@ public class CategoryOptionStrategy {
      */
     private static final Map<String, CategoryOptionConfig> CATEGORY_CONFIGS = new HashMap<>();
 
+    private static final List<String> AVAILABLE_COLORS = List.of(
+            "화이트", "블랙", "브라운", "골드", "오렌지", "그린",
+            "네이비", "핑크", "그레이", "베이지", "실버",
+            "레드", "옐로우", "블루", "바이올렛", "멀티(혼합)"
+    );
+
+    private static List<OptionValueConfig> randomColorOptions(int count) {
+        List<String> shuffled = new ArrayList<>(AVAILABLE_COLORS);
+        Collections.shuffle(shuffled); // 랜덤 섞기
+
+        return shuffled.stream()
+                .limit(count)
+                .map(color -> OptionValueConfig.of(color, 0, 50L))
+                .toList();
+    }
+
     static {
         // 침대 카테고리
         CATEGORY_CONFIGS.put("침대프레임", CategoryOptionConfig.builder()
@@ -161,22 +177,6 @@ public class CategoryOptionStrategy {
 
     // ============ 내부 설정 클래스들 ============
 
-    private static final List<String> AVAILABLE_COLORS = List.of(
-            "화이트", "블랙", "브라운", "골드", "오렌지", "그린",
-            "네이비", "핑크", "그레이", "베이지", "실버",
-            "레드", "옐로우", "블루", "바이올렛", "멀티(혼합)"
-    );
-
-    private static List<OptionValueConfig> randomColorOptions(int count) {
-        List<String> shuffled = new ArrayList<>(AVAILABLE_COLORS);
-        Collections.shuffle(shuffled); // 랜덤 섞기
-
-        return shuffled.stream()
-                .limit(count)
-                .map(color -> OptionValueConfig.of(color, 0, 50L))
-                .toList();
-    }
-
     @Builder
     @Getter
     public static class CategoryOptionConfig {
@@ -198,12 +198,3 @@ public class CategoryOptionStrategy {
         private Long stock;              // 재고
     }
 }
-
-
-
-
-
-
-
-
-

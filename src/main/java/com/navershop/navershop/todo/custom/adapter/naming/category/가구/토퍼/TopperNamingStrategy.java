@@ -1,4 +1,4 @@
-package com.navershop.navershop.todo.custom.adapter.naming.category.가구.소파;
+package com.navershop.navershop.todo.custom.adapter.naming.category.가구.토퍼;
 
 import com.navershop.navershop.todo.custom.adapter.naming.ProductNamingStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -10,14 +10,14 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * 소파 카테고리 전용 네이밍 전략
+ * 토퍼 네이밍
  *
  * @author junnukim1007gmail.com
  * @date 25. 11. 10.
  */
 @Slf4j
 @Component
-public class SofaNamingStrategy implements ProductNamingStrategy {
+public class TopperNamingStrategy implements ProductNamingStrategy {
 
     private static final Random RANDOM = new Random();
 
@@ -35,30 +35,33 @@ public class SofaNamingStrategy implements ProductNamingStrategy {
             "감각적인 컬러의", "심플하고 세련된", "편안함을 선사하는", "부드러움이 살아있는", "따뜻함이 전해지는"
     );
 
-    // 인원 - 모든 조합
-    private static final List<String> SIZES = Arrays.asList(
-            "1인", "2인", "3인", "4인", "5인", "6인"
+    // 부가기능
+    private static final List<String> FEATURES = Arrays.asList(
+            "온도둔감기술적용", "피그먼트", "알러지방지", "진드기방지", "양면사용",
+            "미끄럼방지", "접이식", "커버분리가능", "커버패딩내장",
+            "냉감", "바이오워싱", "커버세탁가능", "방수기능",
+            "전기매트 사용가능", "온수매트 사용가능"
     );
 
-    // 재질 - 모든 조합
+    // 재질
     private static final List<String> MATERIALS = Arrays.asList(
-            "패브릭", "천연가죽", "인조가죽", "벨벳", "린넨",
-            "마이크로화이버", "스웨이드", "코듀로이", "샤무드", "아쿠아클린", "원목", "벤치", "엔틱"
+            "천연라텍스", "플러시폼", "메모리폼", "쿨젤메모리폼", "거위털",
+            "솜", "양모", "홀로파이버", "마이크로화이버", "합성라텍스",
+            "인조라텍스", "우레탄폼", "폴리에스터", "나일론", "TPE"
     );
 
-    private static final List<String> SHAPES = Arrays.asList(
-            "일자형", "카우치형", "코너형", "모듈형", "좌식형", "침대형", "토고", "빈백"
+    // 커버
+    private static final List<String> COVER = Arrays.asList(
+            "오가닉코튼", "면", "순면", "아사면", "극세사",
+            "모달", "리넨", "실크", "광목면", "벨로아",
+            "견면", "폴리에스테르", "레이온/인견"
     );
 
-    // 쿠션감
-    private static final List<String> FLUFFY = Arrays.asList(
-            "푹신한", "약간 푹신한", "보통", "약간 하드한", "하드한"
-    );
 
     @Override
     public String generateProductName(String brand, String categoryName) {
         String descriptor = getRandomItem(DESCRIPTORS);
-        String size = getRandomItem(SIZES);
+        String size = getRandomItem(FEATURES);
         String material = getRandomItem(MATERIALS);
 
         return String.format("%s %s %s %s %s",
@@ -67,7 +70,7 @@ public class SofaNamingStrategy implements ProductNamingStrategy {
 
     @Override
     public boolean supports(String categoryName) {
-        return categoryName != null && categoryName.contains("소파");
+        return categoryName != null && categoryName.contains("토퍼");
     }
 
     @Override
@@ -79,23 +82,21 @@ public class SofaNamingStrategy implements ProductNamingStrategy {
     public List<String> generateAllCombinations(String brand, String categoryName) {
         List<String> allCombinations = new ArrayList<>();
 
-        for (String size : SIZES) {
+        for (String feature : FEATURES) {
             for (String material : MATERIALS) {
-                for (String shape : SHAPES) {
-                    for (String fluffy : FLUFFY) {
-                        String descriptor = getRandomItem(DESCRIPTORS);
+                for (String cover : COVER) {
+                    String descriptor = getRandomItem(DESCRIPTORS);
 
-                        String productName = String.format("%s %s %s %s %s %s %s",
-                                brand, descriptor, size, material, fluffy, shape, categoryName);
+                    String productName = String.format("%s %s %s %s %s %s",
+                            brand, descriptor, feature, material, cover, categoryName);
 
-                        allCombinations.add(productName);
-                    }
+                    allCombinations.add(productName);
                 }
             }
         }
 
-        log.info("소파 {}개 조합 생성 (인원: {}개, 재질: {}개)",
-                allCombinations.size(), SIZES.size(), MATERIALS.size());
+        log.info("소파 {}개 조합 생성",
+                allCombinations.size());
 
         return allCombinations;
     }
