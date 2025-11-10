@@ -1,5 +1,7 @@
 package com.navershop.navershop.template.adapter.provider.product;
 
+import java.util.List;
+
 /**
  * Product 저장 인터페이스
  *
@@ -15,5 +17,7 @@ public interface ProductProvider<PRODUCT> {
      * @param product Product 엔티티
      * @return 저장된 Product
      */
-    PRODUCT save(PRODUCT product);
+//    PRODUCT save(PRODUCT product);
+
+    int saveAll(List<PRODUCT> products);
 }

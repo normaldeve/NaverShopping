@@ -130,7 +130,6 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
     /**
      * 카테고리별 크롤링 (Reactive 방식) - 모든 조합 생성 버전
      */
-    @Transactional
     protected int crawlAndSaveByCategoryReactive(CATEGORY category, USER seller, int count) {
         String categoryName = categoryProvider.getCategoryName(category);
         String keyword = buildFullCategoryPath(category);
@@ -169,17 +168,18 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
 
         // 배치 저장
         int savedCount = 0;
-        int batchSize = 50;
+        int batchSize = 100;
 
         for (int i = 0; i < products.size(); i += batchSize) {
             int end = Math.min(i + batchSize, products.size());
             List<PRODUCT> batch = products.subList(i, end);
 
             try {
-                for (PRODUCT product : batch) {
-                    productProvider.save(product);
-                    savedCount++;
-                }
+//                for (PRODUCT product : batch) {
+//                    productProvider.save(product);
+//                    savedCount++;
+//                }
+                productProvider.saveAll(batch);
                 log.info("배치 저장 완료: {}-{}", i, end);
             } catch (Exception e) {
                 log.error("배치 저장 실패: {}-{}", i, end, e);
