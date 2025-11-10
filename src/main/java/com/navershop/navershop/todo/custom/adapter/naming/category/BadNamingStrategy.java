@@ -37,6 +37,16 @@ public class BadNamingStrategy implements ProductNamingStrategy {
             "싱글", "슈퍼싱글", "퀸", "킹", "더블"
     );
 
+    private static final List<String> FRAMES = Arrays.asList(
+            "평상형", "하단수납형", "하단오픈형", "저상형", "하단밀폐형",
+            "무헤드형", "매트리스일체형", "매트매립형", "데이베드형", "블박이형",
+            "사이드확장형"
+    );
+
+    private static final List<String> TYPES = Arrays.asList(
+            "일반", "수납", "저상형", "패밀리", "이층", "벙커", "모션", "돌", "접이식"
+    );
+
     @Override
     public String generateProductName(String brand, String categoryName) {
         String descriptor = getRandomItem(DESCRIPTORS);
@@ -69,13 +79,17 @@ public class BadNamingStrategy implements ProductNamingStrategy {
 
         for (String material : MATERIALS) {
             for (String size : SIZES) {
-                // 꾸미는말만 랜덤
-                String descriptor = getRandomItem(DESCRIPTORS);
+                for (String frame : FRAMES) {
+                    for (String type : TYPES) {
+                        // 꾸미는말만 랜덤
+                        String descriptor = getRandomItem(DESCRIPTORS);
 
-                String productName = String.format("%s %s %s %s %s",
-                        brand, descriptor, material, size, categoryName);
+                        String productName = String.format("%s %s %s %s사이즈 %s %s%s",
+                                brand, descriptor, material, size, frame, type, categoryName);
 
-                allCombinations.add(productName);
+                        allCombinations.add(productName);
+                    }
+                }
             }
         }
 
