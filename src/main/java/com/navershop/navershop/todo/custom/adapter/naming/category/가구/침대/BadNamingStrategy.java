@@ -1,4 +1,4 @@
-package com.navershop.navershop.todo.custom.adapter.naming.category;
+package com.navershop.navershop.todo.custom.adapter.naming.category.가구.침대;
 
 import com.navershop.navershop.todo.custom.adapter.naming.ProductNamingStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -63,9 +63,7 @@ public class BadNamingStrategy implements ProductNamingStrategy {
 
     @Override
     public boolean supports(String categoryName) {
-        return categoryName != null &&
-                (categoryName.contains("침대프레임") ||
-                        categoryName.equals("침대"));
+        return categoryName != null && (categoryName.contains("침대프레임"));
     }
 
     @Override

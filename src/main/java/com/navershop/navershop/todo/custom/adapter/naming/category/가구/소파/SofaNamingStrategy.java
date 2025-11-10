@@ -1,4 +1,4 @@
-package com.navershop.navershop.todo.custom.adapter.naming.category;
+package com.navershop.navershop.todo.custom.adapter.naming.category.가구.소파;
 
 import com.navershop.navershop.todo.custom.adapter.naming.ProductNamingStrategy;
 import lombok.extern.slf4j.Slf4j;
