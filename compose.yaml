@@ -1,10 +1,36 @@
+version: '3.9'
 services:
-  mysql:
-    image: 'mysql:latest'
+  db_small:
+    image: mysql:8.0
     environment:
-      - 'MYSQL_DATABASE=mydatabase'
-      - 'MYSQL_PASSWORD=secret'
-      - 'MYSQL_ROOT_PASSWORD=verysecret'
-      - 'MYSQL_USER=myuser'
+      MYSQL_DATABASE: small_db
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysqldata_small:/var/lib/mysql
     ports:
-      - '3306'
+      - "3307:3306"
+
+  db_medium:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: medium_db
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysqldata_medium:/var/lib/mysql
+    ports:
+      - "3308:3306"
+
+  db_large:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: large_db
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysqldata_large:/var/lib/mysql
+    ports:
+      - "3309:3306"
+
+volumes:
+  mysqldata_small:
+  mysqldata_medium:
+  mysqldata_large:

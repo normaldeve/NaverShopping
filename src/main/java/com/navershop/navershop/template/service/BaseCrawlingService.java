@@ -221,12 +221,13 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
     }
 
     /**
-     * 전체 카테고리 경로 생성
+     * 전체 카테고리 경로 중 2레벨~3레벨만 키워드로 사용
      */
     protected String buildFullCategoryPath(CATEGORY category) {
         List<String> pathNames = new ArrayList<>();
         CATEGORY current = category;
 
+        // 상위까지 역순으로 추적
         while (current != null) {
             String name = categoryProvider.getCategoryName(current);
             pathNames.add(name);
@@ -239,7 +240,20 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
             }
         }
 
+        // depth 기준으로 reverse 정렬: [1레벨, 2레벨, 3레벨]
         Collections.reverse(pathNames);
+
+        // 2~3레벨만 남기기
+        if (pathNames.size() >= 3) {
+            // 0: 최상위, 1: 2레벨, 2: 3레벨
+            pathNames = pathNames.subList(1, 3);
+        } else if (pathNames.size() == 2) {
+            // 1~2레벨만 존재하면 그대로
+            pathNames = pathNames.subList(1, 2);
+        } else {
+            // 루트 하나만 있으면 그대로 유지
+        }
+
         String fullPath = String.join(" ", pathNames);
         return sanitizeKeyword(fullPath);
     }
