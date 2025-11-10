@@ -8,6 +8,7 @@ import com.navershop.navershop.template.adapter.provider.product.ProductProvider
 import com.navershop.navershop.template.adapter.provider.user.UserProvider;
 import com.navershop.navershop.core.api.NaverShoppingApiClient;
 import com.navershop.navershop.template.service.BaseCrawlingService;
+import com.navershop.navershop.todo.custom.adapter.naming.ProductNameFactory;
 import com.navershop.navershop.todo.repository.product.Product;
 import com.navershop.navershop.todo.repository.category.ProductCategory;
 import com.navershop.navershop.todo.repository.user.User;
@@ -26,7 +27,8 @@ public class ProductCrawlingService extends BaseCrawlingService<Product, Product
             ProductProvider<Product> productProvider,
             CategoryProvider<ProductCategory> categoryProvider,
             UserProvider<User> userProvider,
-            @Autowired(required = false) OptionGenerator<Product> optionGenerator) {
-        super(apiClient, productMapper, productProvider, categoryProvider, userProvider, optionGenerator);
+            @Autowired(required = false) OptionGenerator<Product> optionGenerator,
+            ProductNameFactory productNameFactory) {
+        super(apiClient, productMapper, productProvider, categoryProvider, userProvider, optionGenerator, productNameFactory);
     }
 }

@@ -24,4 +24,12 @@ public interface ProductMapper<PRODUCT, CATEGORY, USER> {
      */
     PRODUCT map(NaverShoppingResponse.NaverShoppingItem item, CATEGORY category, USER seller);
 
+    default PRODUCT map(NaverShoppingResponse.NaverShoppingItem item,
+                        CATEGORY category,
+                        USER seller,
+                        String customBrand,
+                        String customProductName) {
+
+        return map(item, category, seller);
+    }
 }

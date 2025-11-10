@@ -7,6 +7,8 @@ import com.navershop.navershop.template.adapter.option.OptionGenerator;
 import com.navershop.navershop.template.adapter.provider.category.CategoryProvider;
 import com.navershop.navershop.template.adapter.provider.product.ProductProvider;
 import com.navershop.navershop.template.adapter.provider.user.UserProvider;
+import com.navershop.navershop.todo.custom.adapter.naming.ProductNameFactory;
+import com.navershop.navershop.todo.custom.adapter.option.BrandCatalog;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,7 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
     protected final CategoryProvider<CATEGORY> categoryProvider;
     protected final UserProvider<USER> userProvider;
     protected final OptionGenerator<PRODUCT> optionGenerator;
+    protected final ProductNameFactory productNameFactory;
 
     protected BaseCrawlingService(
             NaverShoppingApiClient apiClient,
@@ -36,13 +39,15 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
             ProductProvider<PRODUCT> productProvider,
             CategoryProvider<CATEGORY> categoryProvider,
             UserProvider<USER> userProvider,
-            OptionGenerator<PRODUCT> optionGenerator) {
+            OptionGenerator<PRODUCT> optionGenerator,
+            ProductNameFactory productNameFactory) {
         this.apiClient = apiClient;
         this.productMapper = productMapper;
         this.productProvider = productProvider;
         this.categoryProvider = categoryProvider;
         this.userProvider = userProvider;
         this.optionGenerator = optionGenerator;
+        this.productNameFactory = productNameFactory;
     }
 
     /**
@@ -123,7 +128,7 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
     }
 
     /**
-     * 카테고리별 크롤링 (Reactive 방식)
+     * 카테고리별 크롤링 (Reactive 방식) - 모든 조합 생성 버전
      */
     @Transactional
     protected int crawlAndSaveByCategoryReactive(CATEGORY category, USER seller, int count) {
@@ -134,31 +139,19 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
 
         int display = Math.min(count, 100);
 
-        // 🚀 Reactive 방식으로 API 호출
+        // 🚀 Reactive 방식으로 API 호출 (1개만 가져오기)
         NaverShoppingResponse response = apiClient.searchMultiplePagesReactive(
-                keyword, count, display, "sim");
+                keyword, 1, display, "sim"); // ← count를 1로 변경
 
         if (response == null || response.getItems() == null || response.getItems().isEmpty()) {
             return 0;
         }
 
-        // 병렬 스트림으로 Product 변환
-        List<PRODUCT> products = response.getItems().stream()
-                .limit(count)
-                .parallel()
-                .map(item -> {
-                    PRODUCT product = productMapper.map(item, category, seller);
+        // ✨ 모든 브랜드 조합 생성 (변경된 부분)
+        NaverShoppingResponse.NaverShoppingItem sourceItem = response.getItems().get(0);
+        List<PRODUCT> products = generateAllBrandCombinations(sourceItem, category, seller, categoryName);
 
-                    // 옵션 생성
-                    if (optionGenerator != null && optionGenerator.needsOptions(categoryName)) {
-                        optionGenerator.generateAndAddOptions(product, categoryName);
-                    }
-
-                    return product;
-                })
-                .toList();
-
-        log.info("{}개 상품 변환 완료", products.size());
+        log.info("{}개 상품 변환 완료 (모든 브랜드 조합)", products.size());
 
         // 배치 저장
         return saveProductsBatch(products);
@@ -194,6 +187,44 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
         }
 
         return savedCount;
+    }
+
+    /**
+     * 모든 브랜드 × 소재 × 사이즈 조합 생성
+     */
+    private List<PRODUCT> generateAllBrandCombinations(
+            NaverShoppingResponse.NaverShoppingItem sourceItem,
+            CATEGORY category,
+            USER seller,
+            String categoryName) {
+
+        List<PRODUCT> products = new ArrayList<>();
+
+        // BrandCatalog에서 모든 브랜드 가져오기
+        BrandCatalog catalog = BrandCatalog.fromCategoryName(categoryName);
+        List<String> allBrands = catalog.getBrands();
+
+        log.info("브랜드 {}개로 조합 생성 시작", allBrands.size());
+
+        for (String brand : allBrands) {
+            // 해당 브랜드로 모든 조합의 상품명 생성
+            List<String> productNames = productNameFactory.generateAllCombinations(brand, categoryName);
+
+            for (String productName : productNames) {
+                // 커스텀 브랜드와 상품명으로 Product 생성
+                PRODUCT product = productMapper.map(sourceItem, category, seller, brand, productName);
+
+                // 옵션 생성
+                if (optionGenerator != null && optionGenerator.needsOptions(categoryName)) {
+                    optionGenerator.generateAndAddOptions(product, categoryName);
+                }
+
+                products.add(product);
+            }
+        }
+
+        log.info("총 {}개 상품 조합 생성 완료", products.size());
+        return products;
     }
 
     /**

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 /**
  * 제품 브랜드 카탈로그
@@ -123,6 +124,7 @@ public enum BrandCatalog {
     ));
 
     private final List<String> brands;
+    private static final Random RANDOM = new Random();
 
     public static List<String> getBrandsByCategory(ProductCategory category) {
         return Arrays.stream(values())
@@ -130,5 +132,74 @@ public enum BrandCatalog {
                 .findFirst()
                 .map(BrandCatalog::getBrands)
                 .orElse(Collections.emptyList());
+    }
+    public String getRandomBrand() {
+        if (brands.isEmpty()) {
+            return "기본브랜드";
+        }
+        return brands.get(RANDOM.nextInt(brands.size()));
+    }
+
+    /**
+     * 카테고리명으로 BrandCatalog 찾기
+     */
+    public static BrandCatalog fromCategoryName(String categoryName) {
+        // "가구" 카테고리면 FURNITURE 반환
+        if (categoryName != null) {
+            if (categoryName.contains("가구") || categoryName.contains("침대") ||
+                    categoryName.contains("소파") || categoryName.contains("책상")) {
+                return FURNITURE;
+            }
+            if (categoryName.contains("패브릭") || categoryName.contains("커튼")) {
+                return FABRIC;
+            }
+            if (categoryName.contains("가전") || categoryName.contains("디지털")) {
+                return ELECTRONICS;
+            }
+            if (categoryName.contains("주방")) {
+                return KITCHEN;
+            }
+            if (categoryName.contains("데코") || categoryName.contains("식물")) {
+                return DECOR_PLANT;
+            }
+            if (categoryName.contains("수납") || categoryName.contains("정리")) {
+                return STORAGE;
+            }
+            if (categoryName.contains("유아") || categoryName.contains("아동")) {
+                return KIDS;
+            }
+            if (categoryName.contains("생활")) {
+                return LIVING;
+            }
+            if (categoryName.contains("반려") || categoryName.contains("펫")) {
+                return PET;
+            }
+            if (categoryName.contains("캠핑") || categoryName.contains("레저")) {
+                return CAMPING;
+            }
+            if (categoryName.contains("렌탈")) {
+                return RENTAL;
+            }
+            if (categoryName.contains("장보기")) {
+                return SHOPPING;
+            }
+            if (categoryName.contains("공구")) {
+                return TOOL;
+            }
+            if (categoryName.contains("조명")) {
+                return LIGHTING;
+            }
+        }
+
+        // 기본값: FURNITURE
+        return FURNITURE;
+    }
+
+    /**
+     * 카테고리명에 맞는 랜덤 브랜드 반환
+     */
+    public static String getRandomBrandByCategory(String categoryName) {
+        BrandCatalog catalog = fromCategoryName(categoryName);
+        return catalog.getRandomBrand();
     }
 }

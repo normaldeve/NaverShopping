@@ -23,14 +23,16 @@ public class CategoryOptionStrategy {
         // 침대 카테고리
         CATEGORY_CONFIGS.put("침대", CategoryOptionConfig.builder()
                 .optionGroups(List.of(
-                        OptionGroupConfig.of("사이즈", List.of(
-                                OptionValueConfig.of("싱글", 0, 100L),
-                                OptionValueConfig.of("퀸", 100000, 60L),
-                                OptionValueConfig.of("킹", 150000, 40L)
+                        OptionGroupConfig.of("옵션", List.of(
+                                OptionValueConfig.of("USB포트", 15000, 100L),
+                                OptionValueConfig.of("조명포함", 30000, 60L),
+                                OptionValueConfig.of("서랍포함", 50000, 40L)
                         )),
                         OptionGroupConfig.of("색상", List.of(
                                 OptionValueConfig.of("화이트", 0, 50L),
-                                OptionValueConfig.of("블랙", 10000, 50L)
+                                OptionValueConfig.of("블랙", 10000, 50L),
+                                OptionValueConfig.of("오크", 0, 50L),
+                                OptionValueConfig.of("월넛", 10000, 50L)
                         ))
                 ))
                 .build());

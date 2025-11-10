@@ -1,5 +1,8 @@
 package com.navershop.navershop.todo.custom.adapter.naming;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * 카테고리별 상품명 생성 전략 인터페이스
  *
@@ -20,5 +23,19 @@ public interface ProductNamingStrategy {
      * 해당 전략이 적용 가능한 카테고리인지 확인
      */
     boolean supports(String categoryName);
+
+    /**
+     * 모든 조합 생성 지원 여부 (기본값: false)
+     */
+    default boolean supportsAllCombinations() {
+        return false;
+    }
+
+    /**
+     * 모든 조합의 상품명 생성 (기본 구현: 빈 리스트)
+     */
+    default List<String> generateAllCombinations(String brand, String categoryName) {
+        return Collections.emptyList();
+    }
 
 }

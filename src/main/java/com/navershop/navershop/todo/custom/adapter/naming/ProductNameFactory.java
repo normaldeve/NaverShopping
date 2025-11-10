@@ -59,6 +59,20 @@ public class ProductNameFactory {
     }
 
     /**
+     * 모든 조합의 상품명 생성
+     */
+    public List<String> generateAllCombinations(String brand, String categoryName) {
+        ProductNamingStrategy strategy = findStrategy(categoryName);
+
+        if (strategy != null && strategy.supportsAllCombinations()) {
+            return strategy.generateAllCombinations(brand, categoryName);
+        }
+
+        // 기본 전략: 단일 상품명만 반환
+        return List.of(generateDefaultName(brand, categoryName));
+    }
+
+    /**
      * 기본 상품명 생성 (전략이 없는 경우)
      * 형식: [브랜드] [꾸미는말] [카테고리]
      */

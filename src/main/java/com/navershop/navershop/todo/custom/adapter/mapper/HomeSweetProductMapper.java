@@ -1,6 +1,7 @@
 package com.navershop.navershop.todo.custom.adapter.mapper;
 
-import com.navershop.navershop.config.RandomBrand;
+import com.navershop.navershop.todo.custom.adapter.naming.ProductNameFactory;
+import com.navershop.navershop.todo.custom.adapter.option.BrandCatalog;
 import com.navershop.navershop.todo.repository.product.Product;
 import com.navershop.navershop.todo.repository.category.ProductCategory;
 import com.navershop.navershop.todo.repository.product.ProductStatus;
@@ -21,28 +22,59 @@ import static org.apache.commons.lang3.StringUtils.truncate;
 @RequiredArgsConstructor
 public class HomeSweetProductMapper implements ProductMapper<Product, ProductCategory, User> {
 
-    private final RandomBrand randomBrand;
+    private final ProductNameFactory productNameFactory;
     private final Random random = new Random();
 
     @Override
     public Product map(NaverShoppingResponse.NaverShoppingItem item, ProductCategory category, User seller) {
-        // 1. 제목 정제
-        String title = item.getTitle();
 
-        // 2. 가격 계산 (최저가, 최고가)
+        String brand = BrandCatalog.getRandomBrandByCategory(category.getName());
+
+        // 2. 카테고리명 기반 상품명 생성
+        String productName = productNameFactory.generateProductName(brand, category.getName());
+
+        // 3. 가격 계산 (최저가, 최고가)
         long lprice = Long.parseLong(item.getLprice());
         long hprice = Long.parseLong(item.getHprice());
-
         PriceInfo priceInfo = calculatePrice(lprice, hprice);
-
-        // 3. 브랜드 처리
-        String brand = randomBrand.getOrDefault(item.getBrand());
 
         // 4. Product 엔티티 생성
         return Product.builder()
                 .category(category)
                 .seller(seller)
-                .name(truncate(title, 30))
+                .name(truncate(productName, 30))
+                .imageUrl(item.getImage())
+                .brand(truncate(brand, 20))
+                .basePrice(priceInfo.basePrice)
+                .discountRate(BigDecimal.valueOf(priceInfo.discountRate))
+                .description("네이버 쇼핑에서 수집된 상품입니다.")
+                .shippingPrice(3000)
+                .status(ProductStatus.ON_SALE)
+                .build();
+    }
+
+    @Override
+    public Product map(NaverShoppingResponse.NaverShoppingItem item,
+                       ProductCategory category,
+                       User seller,
+                       String customBrand,
+                       String customProductName) {
+        return createProduct(item, category, seller, customBrand, customProductName);
+    }
+
+    private Product createProduct(NaverShoppingResponse.NaverShoppingItem item,
+                                  ProductCategory category,
+                                  User seller,
+                                  String brand,
+                                  String productName) {
+        long lprice = Long.parseLong(item.getLprice());
+        long hprice = Long.parseLong(item.getHprice());
+        PriceInfo priceInfo = calculatePrice(lprice, hprice);
+
+        return Product.builder()
+                .category(category)
+                .seller(seller)
+                .name(truncate(productName, 30))
                 .imageUrl(item.getImage())
                 .brand(truncate(brand, 20))
                 .basePrice(priceInfo.basePrice)

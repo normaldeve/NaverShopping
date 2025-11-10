@@ -1,8 +1,10 @@
-package com.navershop.navershop.todo.custom.adapter.naming;
+package com.navershop.navershop.todo.custom.adapter.naming.category;
 
+import com.navershop.navershop.todo.custom.adapter.naming.ProductNamingStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -14,7 +16,7 @@ import java.util.Random;
  */
 @Slf4j
 @Component
-public class BadNamingStrategy implements ProductNamingStrategy{
+public class BadNamingStrategy implements ProductNamingStrategy {
 
     private static final Random RANDOM = new Random();
 
@@ -54,6 +56,33 @@ public class BadNamingStrategy implements ProductNamingStrategy{
         return categoryName != null &&
                 (categoryName.contains("침대프레임") ||
                         categoryName.equals("침대"));
+    }
+
+    @Override
+    public boolean supportsAllCombinations() {
+        return true;
+    }
+
+    @Override
+    public List<String> generateAllCombinations(String brand, String categoryName) {
+        List<String> allCombinations = new ArrayList<>();
+
+        for (String material : MATERIALS) {
+            for (String size : SIZES) {
+                // 꾸미는말만 랜덤
+                String descriptor = getRandomItem(DESCRIPTORS);
+
+                String productName = String.format("%s %s %s %s %s",
+                        brand, descriptor, material, size, categoryName);
+
+                allCombinations.add(productName);
+            }
+        }
+
+        log.info("총 {}개 조합 생성 (브랜드: {}, 소재: {}개, 사이즈: {}개)",
+                allCombinations.size(), brand, MATERIALS.size(), SIZES.size());
+
+        return allCombinations;
     }
 
     private String getRandomItem(List<String> items) {
