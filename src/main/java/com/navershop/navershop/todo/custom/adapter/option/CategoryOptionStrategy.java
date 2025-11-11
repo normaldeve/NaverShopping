@@ -69,6 +69,15 @@ public class CategoryOptionStrategy {
                     .build();
         }
 
+        if (categoryName.contains("의자")) {
+            return CategoryOptionConfig.builder()
+                    .optionGroups(List.of(
+                            OptionGroupConfig.of("등판색상", randomOptionsFromPool(AVAILABLE_COLORS, 2, 4)),
+                            OptionGroupConfig.of("좌판색상", randomOptionsFromPool(AVAILABLE_COLORS, 2, 4))
+                    ))
+                    .build();
+        }
+
         // 기본
         return getDefaultConfig();
     }
