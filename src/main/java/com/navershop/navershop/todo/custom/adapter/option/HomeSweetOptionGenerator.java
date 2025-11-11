@@ -30,7 +30,7 @@ public class HomeSweetOptionGenerator implements OptionGenerator<Product> {
             log.info("=== 옵션 생성 시작: {} ===", product.getName());
 
             // 1. 카테고리에 맞는 옵션 설정 가져오기
-            CategoryOptionStrategy.CategoryOptionConfig config = optionStrategy.getConfig(categoryName);
+            CategoryOptionStrategy.CategoryOptionConfig config = optionStrategy.createRandomConfig(categoryName);
 
             // 2. 옵션 그룹 생성 및 추가
             List<ProductOptionGroup> createdGroups = createAndAddOptionGroups(product, config);
