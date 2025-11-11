@@ -54,18 +54,22 @@ public class CategoryOptionStrategy {
         // 소파 카테고리
         CATEGORY_CONFIGS.put("소파", CategoryOptionConfig.builder()
                 .optionGroups(List.of(
-                        OptionGroupConfig.of("부가기능", List.of(
-                                OptionValueConfig.of("양쪽팔걸이형", 200000, 80L),
-                                OptionValueConfig.of("스크래치방지", 100000, 60L),
-                                OptionValueConfig.of("머리받침각도조절", 80000, 40L),
-                                OptionValueConfig.of("방수", 30000, 40L),
-                                OptionValueConfig.of("진드기방지", 10000, 40L)
-
-                        )),
                         OptionGroupConfig.of("구성", List.of(
                                 OptionValueConfig.of("소파단품", 0, 50L),
                                 OptionValueConfig.of("쿠션포함", 10000, 30L),
                                 OptionValueConfig.of("카우치포함", 15000, 40L)
+                        )),
+                        OptionGroupConfig.of("색상", randomColorOptions(6))
+                ))
+                .build());
+
+        // 토퍼 카테고리
+        CATEGORY_CONFIGS.put("토퍼", CategoryOptionConfig.builder()
+                .optionGroups(List.of(
+                        OptionGroupConfig.of("두께", List.of(
+                                OptionValueConfig.of("~5cm", 0, 50L),
+                                OptionValueConfig.of("6~10cm", 10000, 50L),
+                                OptionValueConfig.of("11~15cm", 15000, 50L)
                         )),
                         OptionGroupConfig.of("색상", randomColorOptions(6))
                 ))
