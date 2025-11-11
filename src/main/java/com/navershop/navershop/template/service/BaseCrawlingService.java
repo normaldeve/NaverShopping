@@ -13,7 +13,6 @@ import com.navershop.navershop.todo.custom.adapter.option.BrandCatalog;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -52,8 +51,8 @@ public abstract class BaseCrawlingService<PRODUCT, CATEGORY, USER> {
     }
 
     // 배치 크기 설정
-    private static final int BRAND_BATCH_SIZE = 10;        // 브랜드 5개씩 처리
-    private static final int PRODUCT_BATCH_SIZE = 100;     // 상품 50개씩 저장
+    private static final int BRAND_BATCH_SIZE = 50;        // 브랜드 50개씩 처리
+    private static final int PRODUCT_BATCH_SIZE = 200;     // 상품 200개씩 저장
     private static final int PRODUCT_NAME_BATCH_SIZE = 100; // 상품명 100개씩 처리
 
     // 메모리 임계값

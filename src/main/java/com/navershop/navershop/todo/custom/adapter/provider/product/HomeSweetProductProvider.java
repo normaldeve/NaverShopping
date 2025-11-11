@@ -24,19 +24,7 @@ public class HomeSweetProductProvider implements ProductProvider<Product> {
     @PersistenceContext
     private final EntityManager entityManager;
 
-    private static final int BATCH_SIZE = 100;
-
-//    @Override
-//    public Product save(Product product) {
-//        try {
-//            Product saved = productRepository.save(product);
-//            log.debug("저장 완료: {}", product.getName());
-//            return saved;
-//        } catch (Exception e) {
-//            log.error("저장 실패: {}", product.getName(), e);
-//            throw e;
-//        }
-//    }
+    private static final int BATCH_SIZE = 200;
 
     @Override
     public int saveAll(List<Product> products) {
