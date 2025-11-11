@@ -23,13 +23,20 @@ public class CategoryOptionStrategy {
             "레드", "옐로우", "블루", "바이올렛", "멀티(혼합)"
     );
 
-    private static List<OptionValueConfig> randomColorOptions(int count) {
-        List<String> shuffled = new ArrayList<>(AVAILABLE_COLORS);
-        Collections.shuffle(shuffled); // 랜덤 섞기
+    private static final List<String> BED_OPTIONS_POOL = List.of(
+            "USB포트", "조명포함", "서랍포함", "헤드조명", "LED패널", "수납형", "무헤드형", "라탄헤드보드"
+    );
 
-        return shuffled.stream()
+    private static final List<String> BED_COLORS_POOL = List.of(
+            "화이트", "블랙", "오크", "월넛", "그레이", "내추럴", "베이지", "브라운"
+    );
+
+    private static List<OptionValueConfig> randomOptionsFromPool(List<String> pool, int min, int max) {
+        Collections.shuffle(pool);
+        int count = new Random().nextInt(max - min + 1) + min;
+        return pool.stream()
                 .limit(count)
-                .map(color -> OptionValueConfig.of(color, 0, 50L))
+                .map(opt -> OptionValueConfig.of(opt, 10000 * new Random().nextInt(5), 10000L))
                 .toList();
     }
 
@@ -37,17 +44,8 @@ public class CategoryOptionStrategy {
         // 침대 카테고리
         CATEGORY_CONFIGS.put("침대프레임", CategoryOptionConfig.builder()
                 .optionGroups(List.of(
-                        OptionGroupConfig.of("옵션", List.of(
-                                OptionValueConfig.of("USB포트", 15000, 100L),
-                                OptionValueConfig.of("조명포함", 30000, 60L),
-                                OptionValueConfig.of("서랍포함", 50000, 40L)
-                        )),
-                        OptionGroupConfig.of("색상", List.of(
-                                OptionValueConfig.of("화이트", 0, 50L),
-                                OptionValueConfig.of("블랙", 10000, 50L),
-                                OptionValueConfig.of("오크", 0, 50L),
-                                OptionValueConfig.of("월넛", 10000, 50L)
-                        ))
+                        OptionGroupConfig.of("옵션", randomOptionsFromPool(BED_OPTIONS_POOL, 2, 4)),
+                        OptionGroupConfig.of("색상", randomOptionsFromPool(BED_COLORS_POOL, 3, 6))
                 ))
                 .build());
 
@@ -59,7 +57,7 @@ public class CategoryOptionStrategy {
                                 OptionValueConfig.of("쿠션포함", 10000, 30L),
                                 OptionValueConfig.of("카우치포함", 15000, 40L)
                         )),
-                        OptionGroupConfig.of("색상", randomColorOptions(6))
+                        OptionGroupConfig.of("색상", randomOptionsFromPool(AVAILABLE_COLORS, 3, 5))
                 ))
                 .build());
 
@@ -71,7 +69,7 @@ public class CategoryOptionStrategy {
                                 OptionValueConfig.of("6~10cm", 10000, 50L),
                                 OptionValueConfig.of("11~15cm", 15000, 50L)
                         )),
-                        OptionGroupConfig.of("색상", randomColorOptions(6))
+                        OptionGroupConfig.of("색상", randomOptionsFromPool(AVAILABLE_COLORS, 3, 5))
                 ))
                 .build());
 
