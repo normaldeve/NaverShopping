@@ -87,8 +87,8 @@ public class TopperNamingStrategy implements ProductNamingStrategy {
                 for (String cover : COVER) {
                     String descriptor = getRandomItem(DESCRIPTORS);
 
-                    String productName = String.format("%s %s %s %s %s %s",
-                            brand, descriptor, feature, material, cover, categoryName);
+                    String productName = String.format("%s %s %s %s %s (%s)",
+                            brand, descriptor, material, cover, categoryName, feature);
 
                     allCombinations.add(productName);
                 }
