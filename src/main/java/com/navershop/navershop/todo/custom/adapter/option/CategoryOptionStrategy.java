@@ -16,11 +16,11 @@ public class CategoryOptionStrategy {
     private final List<String> AVAILABLE_COLORS = new ArrayList<>(List.of(
             "화이트", "블랙", "브라운", "골드", "오렌지", "그린",
             "네이비", "핑크", "그레이", "베이지", "실버",
-            "레드", "옐로우", "블루", "바이올렛", "멀티(혼합)"
+            "레드", "옐로우", "블루"
     ));
 
     private final List<String> BED_OPTIONS_POOL = new ArrayList<>(List.of(
-            "USB포트추가", "조명포함", "서랍포함", "헤드조명", "수납추가", "헤드포함"
+            "USB포트추가", "조명추가", "서랍추가", "헤드조명", "수납추가", "헤드추가"
     ));
 
     private static List<OptionValueConfig> randomOptionsFromPool(List<String> pool, int min, int max) {
