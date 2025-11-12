@@ -23,7 +23,21 @@ public class CategoryOptionStrategy {
             "USB포트추가", "조명추가", "서랍추가", "헤드조명", "수납추가", "헤드추가"
     ));
 
-    private static List<OptionValueConfig> randomOptionsFromPool(List<String> pool, int min, int max) {
+    private final List<String> SOFA_OPTIONS_POOL = new ArrayList<>(List.of(
+            "쿠션포함", "카우치포함", "헤드레스트 추가"
+    ));
+
+    private final List<String> LENGTH = new ArrayList<>(List.of(
+            "100cm", "130cm", "150cm", "170cm", "190cm", "210cm", "230cm", "250cm", "270cm", "290cm"
+    ));
+
+    private static List<OptionValueConfig> randomOptionsFromPool(List<String> pool, int min, int max, boolean includeBasic) {
+        List<OptionValueConfig> result = new ArrayList<>();
+
+        if (includeBasic) {
+            result.add(OptionValueConfig.of("기본", 0, 100L));
+        }
+
         List<String> shuffled = new ArrayList<>(pool);
         Collections.shuffle(shuffled, ThreadLocalRandom.current());
         int count = ThreadLocalRandom.current().nextInt(min, max + 1);
@@ -37,8 +51,8 @@ public class CategoryOptionStrategy {
         if (categoryName.contains("침대")) {
             return CategoryOptionConfig.builder()
                     .optionGroups(List.of(
-                            OptionGroupConfig.of("옵션", randomOptionsFromPool(BED_OPTIONS_POOL, 1, 2)),
-                            OptionGroupConfig.of("색상", randomOptionsFromPool(AVAILABLE_COLORS, 2, 4))
+                            OptionGroupConfig.of("옵션", randomOptionsFromPool(BED_OPTIONS_POOL, 2, 3, true)),
+                            OptionGroupConfig.of("색상", randomOptionsFromPool(AVAILABLE_COLORS, 2, 4, false))
                     ))
                     .build();
         }
@@ -46,12 +60,8 @@ public class CategoryOptionStrategy {
         if (categoryName.contains("소파")) {
             return CategoryOptionConfig.builder()
                     .optionGroups(List.of(
-                            OptionGroupConfig.of("구성", List.of(
-                                    OptionValueConfig.of("소파단품", 0, 50L),
-                                    OptionValueConfig.of("쿠션포함", 10000, 30L),
-                                    OptionValueConfig.of("카우치포함", 15000, 40L)
-                            )),
-                            OptionGroupConfig.of("색상", randomOptionsFromPool(AVAILABLE_COLORS, 2, 4))
+                            OptionGroupConfig.of("옵션", randomOptionsFromPool(SOFA_OPTIONS_POOL, 2, 3, true)),
+                            OptionGroupConfig.of("색상", randomOptionsFromPool(AVAILABLE_COLORS, 2, 4, false))
                     ))
                     .build();
         }
@@ -59,12 +69,9 @@ public class CategoryOptionStrategy {
         if (categoryName.contains("토퍼")) {
             return CategoryOptionConfig.builder()
                     .optionGroups(List.of(
-                            OptionGroupConfig.of("두께", List.of(
-                                    OptionValueConfig.of("~5cm", 0, 50L),
-                                    OptionValueConfig.of("6~10cm", 10000, 50L),
-                                    OptionValueConfig.of("11~15cm", 15000, 50L)
-                            )),
-                            OptionGroupConfig.of("색상", randomOptionsFromPool(AVAILABLE_COLORS, 2, 4))
+                            OptionGroupConfig.of("가로", randomOptionsFromPool(LENGTH, 3, 4, false)),
+                            OptionGroupConfig.of("세로", randomOptionsFromPool(LENGTH, 3, 4, false)),
+                            OptionGroupConfig.of("색상", randomOptionsFromPool(AVAILABLE_COLORS, 2, 4, false))
                     ))
                     .build();
         }
@@ -72,8 +79,28 @@ public class CategoryOptionStrategy {
         if (categoryName.contains("의자")) {
             return CategoryOptionConfig.builder()
                     .optionGroups(List.of(
-                            OptionGroupConfig.of("등판색상", randomOptionsFromPool(AVAILABLE_COLORS, 2, 4)),
-                            OptionGroupConfig.of("좌판색상", randomOptionsFromPool(AVAILABLE_COLORS, 2, 4))
+                            OptionGroupConfig.of("등판색상", randomOptionsFromPool(AVAILABLE_COLORS, 2, 4, false)),
+                            OptionGroupConfig.of("좌판색상", randomOptionsFromPool(AVAILABLE_COLORS, 2, 4, false))
+                    ))
+                    .build();
+        }
+
+        if (categoryName.contains("러그")) {
+            return CategoryOptionConfig.builder()
+                    .optionGroups(List.of(
+                            OptionGroupConfig.of("가로", randomOptionsFromPool(LENGTH, 3, 4, false)),
+                            OptionGroupConfig.of("세로", randomOptionsFromPool(LENGTH, 3, 4, false)),
+                            OptionGroupConfig.of("색상", randomOptionsFromPool(AVAILABLE_COLORS, 3, 4, false))
+                    ))
+                    .build();
+        }
+
+        if (categoryName.contains("커튼")) {
+            return CategoryOptionConfig.builder()
+                    .optionGroups(List.of(
+                            OptionGroupConfig.of("가로", randomOptionsFromPool(LENGTH, 3, 4, false)),
+                            OptionGroupConfig.of("세로", randomOptionsFromPool(LENGTH, 3, 4, false)),
+                            OptionGroupConfig.of("색상", randomOptionsFromPool(AVAILABLE_COLORS, 3, 4, false))
                     ))
                     .build();
         }

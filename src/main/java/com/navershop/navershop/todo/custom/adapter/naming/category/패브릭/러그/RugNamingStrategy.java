@@ -1,4 +1,4 @@
-package com.navershop.navershop.todo.custom.adapter.naming.category.가구.의자;
+package com.navershop.navershop.todo.custom.adapter.naming.category.패브릭.러그;
 
 import com.navershop.navershop.todo.custom.adapter.naming.ProductNamingStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import java.util.Random;
  */
 @Slf4j
 @Component
-public class SeatNamingStrategy implements ProductNamingStrategy {
+public class RugNamingStrategy implements ProductNamingStrategy {
 
 
     private static final Random RANDOM = new Random();
@@ -37,25 +37,29 @@ public class SeatNamingStrategy implements ProductNamingStrategy {
     );
 
     // 재질 - 모든 조합
-    private static final List<String> MATERIALS = Arrays.asList(
-            "원목", "철재", "패브릭", "천연가죽", "플라스틱",
-            "벨벳", "인조가죽", "스웨이드"
+    private static final List<String> DETAILS = Arrays.asList(
+            "무지", "체크", "스트라이프", "프린트", "에스닉",
+            "헤링본", "기하학", "캐릭터", "플라워"
     );
 
     private static final List<String> SHAPES = Arrays.asList(
-            "인테리어", "스툴", "벤치", "게이밍", "학생",
-            "사무용", "좌식", "자세보정"
+            "사각형", "직사각형", "원형", "타원형", "정사각형",
+            "반원형"
+    );
+
+    private static final List<String> FEATURES = Arrays.asList(
+            "단모", "천연양모", "극세사", "소프트", "인테리어", "먼지없는", "사계절"
     );
 
     // 쿠션감
-    private static final List<String> FLUFFY = Arrays.asList(
-            "높이조절", "탈착형", "목받침없음", "각도조절", "일체형", "듀얼등받이", "틸팅강도조절"
+    private static final List<String> POSSIBLE = Arrays.asList(
+            "세탁가능", "손세탁", "드라이클리닝", "방수"
     );
 
     @Override
     public String generateProductName(String brand, String categoryName) {
         String descriptor = getRandomItem(DESCRIPTORS);
-        String material = getRandomItem(MATERIALS);
+        String material = getRandomItem(DETAILS);
 
         return String.format("%s %s %s %s",
                 brand, descriptor, material, categoryName);
@@ -63,7 +67,7 @@ public class SeatNamingStrategy implements ProductNamingStrategy {
 
     @Override
     public boolean supports(String categoryName) {
-        return categoryName != null && categoryName.contains("의자");
+        return categoryName != null && categoryName.contains("러그");
     }
 
     @Override
@@ -75,21 +79,23 @@ public class SeatNamingStrategy implements ProductNamingStrategy {
     public List<String> generateAllCombinations(String brand, String categoryName) {
         List<String> allCombinations = new ArrayList<>();
 
-        for (String material : MATERIALS) {
+        for (String detail : DETAILS) {
             for (String shape : SHAPES) {
-                for (String fluffy : FLUFFY) {
-                    String descriptor = getRandomItem(DESCRIPTORS);
+                for (String feature : FEATURES) {
+                    for (String possible : POSSIBLE) {
+                        String descriptor = getRandomItem(DESCRIPTORS);
 
-                    String productName = String.format("%s %s %s %s %s %s",
-                            brand, descriptor, material, fluffy, shape, categoryName);
+                        String productName = String.format("%s %s %s %s %s %s (%s)",
+                                brand, descriptor, detail, shape, feature, categoryName, possible);
 
-                    allCombinations.add(productName);
+                        allCombinations.add(productName);
+                    }
                 }
             }
         }
 
-        log.info("소파 {}개 조합 생성 (인원: {}개, 재질: {}개)",
-                allCombinations.size(), SHAPES.size(), MATERIALS.size());
+        log.info("러그 {}개 조합 생성 (인원: {}개, 재질: {}개)",
+                allCombinations.size(), SHAPES.size(), POSSIBLE.size());
 
         return allCombinations;
     }

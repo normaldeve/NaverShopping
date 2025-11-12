@@ -1,4 +1,4 @@
-package com.navershop.navershop.todo.custom.adapter.naming.category.가구.의자;
+package com.navershop.navershop.todo.custom.adapter.naming.category.패브릭.토퍼;
 
 import com.navershop.navershop.todo.custom.adapter.naming.ProductNamingStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -10,15 +10,14 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * 테이블 이름 짓기
+ * 토퍼 네이밍
  *
  * @author junnukim1007gmail.com
- * @date 25. 11. 11.
+ * @date 25. 11. 10.
  */
 @Slf4j
 @Component
-public class SeatNamingStrategy implements ProductNamingStrategy {
-
+public class TopperNamingStrategy implements ProductNamingStrategy {
 
     private static final Random RANDOM = new Random();
 
@@ -36,34 +35,42 @@ public class SeatNamingStrategy implements ProductNamingStrategy {
             "감각적인 컬러의", "심플하고 세련된", "편안함을 선사하는", "부드러움이 살아있는", "따뜻함이 전해지는"
     );
 
-    // 재질 - 모든 조합
+    // 부가기능
+    private static final List<String> FEATURES = Arrays.asList(
+            "온도둔감기술적용", "피그먼트", "알러지방지", "진드기방지", "양면사용",
+            "미끄럼방지", "접이식", "커버분리가능", "커버패딩내장",
+            "냉감", "바이오워싱", "커버세탁가능", "방수기능",
+            "전기매트 사용가능", "온수매트 사용가능"
+    );
+
+    // 재질
     private static final List<String> MATERIALS = Arrays.asList(
-            "원목", "철재", "패브릭", "천연가죽", "플라스틱",
-            "벨벳", "인조가죽", "스웨이드"
+            "천연라텍스", "플러시폼", "메모리폼", "쿨젤메모리폼", "거위털",
+            "솜", "양모", "홀로파이버", "마이크로화이버", "합성라텍스",
+            "인조라텍스", "우레탄폼", "폴리에스터", "나일론", "TPE"
     );
 
-    private static final List<String> SHAPES = Arrays.asList(
-            "인테리어", "스툴", "벤치", "게이밍", "학생",
-            "사무용", "좌식", "자세보정"
+    // 커버
+    private static final List<String> COVER = Arrays.asList(
+            "오가닉코튼", "면", "순면", "아사면", "극세사",
+            "모달", "리넨", "실크", "광목면", "벨로아",
+            "견면", "폴리에스테르", "레이온/인견"
     );
 
-    // 쿠션감
-    private static final List<String> FLUFFY = Arrays.asList(
-            "높이조절", "탈착형", "목받침없음", "각도조절", "일체형", "듀얼등받이", "틸팅강도조절"
-    );
 
     @Override
     public String generateProductName(String brand, String categoryName) {
         String descriptor = getRandomItem(DESCRIPTORS);
+        String size = getRandomItem(FEATURES);
         String material = getRandomItem(MATERIALS);
 
-        return String.format("%s %s %s %s",
-                brand, descriptor, material, categoryName);
+        return String.format("%s %s %s %s %s",
+                brand, descriptor, size, material, categoryName);
     }
 
     @Override
     public boolean supports(String categoryName) {
-        return categoryName != null && categoryName.contains("의자");
+        return categoryName != null && categoryName.contains("토퍼");
     }
 
     @Override
@@ -75,21 +82,21 @@ public class SeatNamingStrategy implements ProductNamingStrategy {
     public List<String> generateAllCombinations(String brand, String categoryName) {
         List<String> allCombinations = new ArrayList<>();
 
-        for (String material : MATERIALS) {
-            for (String shape : SHAPES) {
-                for (String fluffy : FLUFFY) {
+        for (String feature : FEATURES) {
+            for (String material : MATERIALS) {
+                for (String cover : COVER) {
                     String descriptor = getRandomItem(DESCRIPTORS);
 
-                    String productName = String.format("%s %s %s %s %s %s",
-                            brand, descriptor, material, fluffy, shape, categoryName);
+                    String productName = String.format("%s %s %s %s %s (%s)",
+                            brand, descriptor, material, cover, categoryName, feature);
 
                     allCombinations.add(productName);
                 }
             }
         }
 
-        log.info("소파 {}개 조합 생성 (인원: {}개, 재질: {}개)",
-                allCombinations.size(), SHAPES.size(), MATERIALS.size());
+        log.info("소파 {}개 조합 생성",
+                allCombinations.size());
 
         return allCombinations;
     }
