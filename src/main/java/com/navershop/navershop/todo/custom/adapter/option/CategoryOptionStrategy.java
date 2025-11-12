@@ -66,16 +66,6 @@ public class CategoryOptionStrategy {
                     .build();
         }
 
-        if (categoryName.contains("토퍼")) {
-            return CategoryOptionConfig.builder()
-                    .optionGroups(List.of(
-                            OptionGroupConfig.of("가로", randomOptionsFromPool(LENGTH, 3, 4, false)),
-                            OptionGroupConfig.of("세로", randomOptionsFromPool(LENGTH, 3, 4, false)),
-                            OptionGroupConfig.of("색상", randomOptionsFromPool(AVAILABLE_COLORS, 2, 4, false))
-                    ))
-                    .build();
-        }
-
         if (categoryName.contains("의자")) {
             return CategoryOptionConfig.builder()
                     .optionGroups(List.of(
@@ -89,8 +79,16 @@ public class CategoryOptionStrategy {
             return CategoryOptionConfig.builder()
                     .optionGroups(List.of(
                             OptionGroupConfig.of("가로", randomOptionsFromPool(LENGTH, 3, 4, false)),
-                            OptionGroupConfig.of("세로", randomOptionsFromPool(LENGTH, 3, 4, false)),
-                            OptionGroupConfig.of("색상", randomOptionsFromPool(AVAILABLE_COLORS, 3, 4, false))
+                            OptionGroupConfig.of("세로", randomOptionsFromPool(LENGTH, 3, 4, false))
+                    ))
+                    .build();
+        }
+
+        if (categoryName.contains("토퍼")) {
+            return CategoryOptionConfig.builder()
+                    .optionGroups(List.of(
+                            OptionGroupConfig.of("가로", randomOptionsFromPool(LENGTH, 3, 4, false)),
+                            OptionGroupConfig.of("세로", randomOptionsFromPool(LENGTH, 3, 4, false))
                     ))
                     .build();
         }
@@ -99,8 +97,27 @@ public class CategoryOptionStrategy {
             return CategoryOptionConfig.builder()
                     .optionGroups(List.of(
                             OptionGroupConfig.of("가로", randomOptionsFromPool(LENGTH, 3, 4, false)),
+                            OptionGroupConfig.of("세로", randomOptionsFromPool(LENGTH, 3, 4, false))
+                    ))
+                    .build();
+        }
+
+        if (categoryName.contains("선반")) {
+            return CategoryOptionConfig.builder()
+                    .optionGroups(List.of(
+                            OptionGroupConfig.of("가로", randomOptionsFromPool(LENGTH, 3, 4, false)),
                             OptionGroupConfig.of("세로", randomOptionsFromPool(LENGTH, 3, 4, false)),
-                            OptionGroupConfig.of("색상", randomOptionsFromPool(AVAILABLE_COLORS, 3, 4, false))
+                            OptionGroupConfig.of("높이", randomOptionsFromPool(LENGTH, 3, 4, false))
+                    ))
+                    .build();
+        }
+
+        if (categoryName.contains("서랍장")) {
+            return CategoryOptionConfig.builder()
+                    .optionGroups(List.of(
+                            OptionGroupConfig.of("가로", randomOptionsFromPool(LENGTH, 3, 4, false)),
+                            OptionGroupConfig.of("세로", randomOptionsFromPool(LENGTH, 3, 4, false)),
+                            OptionGroupConfig.of("높이", randomOptionsFromPool(LENGTH, 3, 4, false))
                     ))
                     .build();
         }

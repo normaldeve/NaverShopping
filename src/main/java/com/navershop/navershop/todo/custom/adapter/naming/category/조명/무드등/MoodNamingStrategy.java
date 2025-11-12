@@ -47,24 +47,20 @@ public class MoodNamingStrategy implements ProductNamingStrategy {
 
     // 부가기능
     private static final List<String> FEATURES = Arrays.asList(
-            "온도둔감기술적용", "피그먼트", "알러지방지", "진드기방지", "양면사용",
-            "미끄럼방지", "접이식", "커버분리가능", "커버패딩내장",
-            "냉감", "바이오워싱", "커버세탁가능", "방수기능",
-            "전기매트 사용가능", "온수매트 사용가능"
+            "버섯", "우주인", "토끼", "장미", "달",
+            "이니셜", "짱구", "별", "포켓몬스터", "우주"
     );
 
     // 재질
     private static final List<String> MATERIALS = Arrays.asList(
-            "천연라텍스", "플러시폼", "메모리폼", "쿨젤메모리폼", "거위털",
-            "솜", "양모", "홀로파이버", "마이크로화이버", "합성라텍스",
-            "인조라텍스", "우레탄폼", "폴리에스터", "나일론", "TPE"
+            "플라스틱", "유리", "도자기", "우드", "스톤",
+            "메탈", "패브릭", "크리스탈", "종이", "라탄"
     );
 
     // 커버
-    private static final List<String> COVER = Arrays.asList(
-            "오가닉코튼", "면", "순면", "아사면", "극세사",
-            "모달", "리넨", "실크", "광목면", "벨로아",
-            "견면", "폴리에스테르", "레이온/인견"
+    private static final List<String> TYPES = Arrays.asList(
+            "플리커프리", "눈부심방지", "밝기조절", "리모컨", "컬러변화",
+            "IOT기능", "각도조철", "터치스위치"
     );
 
 
@@ -94,18 +90,18 @@ public class MoodNamingStrategy implements ProductNamingStrategy {
 
         for (String feature : FEATURES) {
             for (String material : MATERIALS) {
-                for (String cover : COVER) {
+                for (String type : TYPES) {
                     String descriptor = getRandomItem(DESCRIPTORS);
 
-                    String productName = String.format("%s %s %s %s %s (%s)",
-                            brand, descriptor, material, cover, categoryName, feature);
+                    String productName = String.format("[%s] %s %s 모양의 %s %s (%s)",
+                            brand, descriptor, feature, material, categoryName, type);
 
                     allCombinations.add(productName);
                 }
             }
         }
 
-        log.info("소파 {}개 조합 생성",
+        log.info("무드등 {}개 조합 생성",
                 allCombinations.size());
 
         return allCombinations;

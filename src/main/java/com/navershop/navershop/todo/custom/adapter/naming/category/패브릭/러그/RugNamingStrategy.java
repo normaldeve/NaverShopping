@@ -47,13 +47,14 @@ public class RugNamingStrategy implements ProductNamingStrategy {
             "반원형"
     );
 
-    private static final List<String> FEATURES = Arrays.asList(
-            "단모", "천연양모", "극세사", "소프트", "인테리어", "먼지없는", "사계절"
-    );
-
     // 쿠션감
     private static final List<String> POSSIBLE = Arrays.asList(
             "세탁가능", "손세탁", "드라이클리닝", "방수"
+    );
+
+    private static final List<String> COLORS = Arrays.asList(
+            "화이트", "블랙", "오렌지", "그린", "골드",
+            "브라운", "실버", "블루", "옐로우", "네이비"
     );
 
     @Override
@@ -81,12 +82,12 @@ public class RugNamingStrategy implements ProductNamingStrategy {
 
         for (String detail : DETAILS) {
             for (String shape : SHAPES) {
-                for (String feature : FEATURES) {
+                for (String color : COLORS) {
                     for (String possible : POSSIBLE) {
                         String descriptor = getRandomItem(DESCRIPTORS);
 
                         String productName = String.format("[%s] %s %s %s %s %s (%s)",
-                                brand, descriptor, detail, shape, feature, categoryName, possible);
+                                brand, descriptor, detail, shape, color, categoryName, possible);
 
                         allCombinations.add(productName);
                     }

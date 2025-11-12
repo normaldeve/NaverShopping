@@ -37,26 +37,28 @@ public class TopperNamingStrategy implements ProductNamingStrategy {
 
     // 부가기능
     private static final List<String> FEATURES = Arrays.asList(
-            "온도둔감기술적용", "피그먼트", "알러지방지", "진드기방지", "양면사용",
+            "알러지방지", "진드기방지", "양면사용",
             "미끄럼방지", "접이식", "커버분리가능", "커버패딩내장",
-            "냉감", "바이오워싱", "커버세탁가능", "방수기능",
-            "전기매트 사용가능", "온수매트 사용가능"
+            "냉감", "바이오워싱", "커버세탁가능", "방수기능"
     );
 
     // 재질
     private static final List<String> MATERIALS = Arrays.asList(
             "천연라텍스", "플러시폼", "메모리폼", "쿨젤메모리폼", "거위털",
-            "솜", "양모", "홀로파이버", "마이크로화이버", "합성라텍스",
-            "인조라텍스", "우레탄폼", "폴리에스터", "나일론", "TPE"
+            "솜", "양모", "홀로파이버", "인조라텍스", "우레탄폼",
+            "폴리에스터", "나일론"
     );
 
     // 커버
     private static final List<String> COVER = Arrays.asList(
             "오가닉코튼", "면", "순면", "아사면", "극세사",
-            "모달", "리넨", "실크", "광목면", "벨로아",
-            "견면", "폴리에스테르", "레이온/인견"
+            "모달", "리넨", "실크"
     );
 
+    private static final List<String> COLORS = Arrays.asList(
+            "화이트", "블랙", "오렌지", "그린", "골드",
+            "브라운", "실버", "블루", "옐로우", "네이비"
+    );
 
     @Override
     public String generateProductName(String brand, String categoryName) {
@@ -85,12 +87,14 @@ public class TopperNamingStrategy implements ProductNamingStrategy {
         for (String feature : FEATURES) {
             for (String material : MATERIALS) {
                 for (String cover : COVER) {
-                    String descriptor = getRandomItem(DESCRIPTORS);
+                    for (String color : COLORS) {
+                        String descriptor = getRandomItem(DESCRIPTORS);
 
-                    String productName = String.format("[%s] %s %s 재질의 %s %s (%s)",
-                            brand, descriptor, material, cover, categoryName, feature);
+                        String productName = String.format("[%s] %s %s 재질의 %s %s %s (%s)",
+                                brand, descriptor, material, color, cover, categoryName, feature);
 
-                    allCombinations.add(productName);
+                        allCombinations.add(productName);
+                    }
                 }
             }
         }

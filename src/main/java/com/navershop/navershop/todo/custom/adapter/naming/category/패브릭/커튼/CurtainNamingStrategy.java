@@ -47,14 +47,13 @@ public class CurtainNamingStrategy implements ProductNamingStrategy {
             "도트", "플라워", "레터링", "기하학", "캐릭터"
     );
 
-    // 쿠션감
-    private static final List<String> FLUFFY = Arrays.asList(
-            "암막", "방한", "일반", "형상기억", "가리개",
-            "주방", "거실"
-    );
-
     private static final List<String> TYPES = Arrays.asList(
             "세탁 가능", "세탁 불가", "드라이클리닝", "손세탁"
+    );
+
+    private static final List<String> COLORS = Arrays.asList(
+            "화이트", "블랙", "오렌지", "그린", "골드",
+            "브라운", "실버", "블루", "옐로우", "네이비"
     );
 
     @Override
@@ -82,12 +81,12 @@ public class CurtainNamingStrategy implements ProductNamingStrategy {
 
         for (String material : MATERIALS) {
             for (String shape : SHAPES) {
-                for (String fluffy : FLUFFY) {
+                for (String color : COLORS) {
                     for (String type : TYPES) {
                         String descriptor = getRandomItem(DESCRIPTORS);
 
                         String productName = String.format("[%s] %s %s %s %s %s (%s)",
-                                brand, descriptor, material, shape, fluffy, categoryName, type);
+                                brand, descriptor, material, shape, color, categoryName, type);
 
                         allCombinations.add(productName);
                     }
