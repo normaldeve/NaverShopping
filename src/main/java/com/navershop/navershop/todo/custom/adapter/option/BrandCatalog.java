@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -74,27 +73,6 @@ public enum BrandCatalog {
             "카사리오", "코튼앤홈", "쿠션벨", "테라룸", "하임패브릭"
     )),
 
-    ELECTRONICS(Arrays.asList(
-            "삼성전자", "쿠쿠", "로보락", "쿠첸", "나비엔 매직",
-            "아이닉", "제니퍼룸", "보아르", "마샬", "ASUS",
-            "LG전자", "와이드뷰", "미닉스", "캐리어", "위닉스",
-            "디베아", "린클", "모온", "캐치웰"
-    )),
-
-    KITCHEN(Arrays.asList(
-            "오가든", "바겐슈타이거", "스타우브", "달팽이리빙", "한샘",
-            "휘슬러", "트루쿡", "쓰임", "르난세", "땡스소윤",
-            "시라쿠스", "테팔", "메종오브제", "락앤락", "AMT",
-            "이브리엉", "타블도트", "무타공마켓", "네오플램", "글로벌나이프"
-    )),
-
-    DECOR_PLANT(Arrays.asList(
-            "오가든", "헤트라스", "세잔느화실", "에이센트", "파워플랜트",
-            "데팡스", "코코도르", "메이드모드", "테일러센츠", "데일리오브젝트",
-            "에덴미술", "아트밀", "무아스", "더 아트", "스튜디오무드",
-            "이너조깅", "레나에너지", "펫플랜트", "헬로프로그", "애시드로우"
-    )),
-
     STORAGE(Arrays.asList(
             // ㄱ (10)
             "가온리빙", "가든하우스", "골든박스", "그레인스토리지", "그로우홈",
@@ -126,55 +104,6 @@ public enum BrandCatalog {
             // ㅊ~ㅎ (10)
             "차오하우스", "초이스리빙", "체리홈", "치엘하우스", "첼시리빙",
             "카사리빙", "코튼홈", "쿠션앤룸", "테라하우스", "하임리빙"
-    )),
-
-    KIDS(Arrays.asList(
-            "아이러브베베", "베베앙 아기물티슈", "베베숲", "베베앙", "한샘",
-            "일룸", "아워매뉴얼", "레이디가구", "베이비브레짜", "티엔디자인",
-            "스마트에코", "리바트", "뉴트리시아", "퍼니코", "아이엔지홈",
-            "팸퍼스", "윌로우", "꿈꾸는요셉", "시디즈", "룸핏"
-    )),
-
-    LIVING(Arrays.asList(
-            "코튼리빙", "무타공마켓", "오가든", "라다타", "리프홈",
-            "프랑코", "바이칸", "에브리윅", "다룸", "브랜든",
-            "매직캔", "송월타월", "하우스레시피", "닥터워터", "소프트터치",
-            "달팽이리빙", "한샘", "클라우망스탠다드", "무아스", "반값리필"
-    )),
-
-    PET(Arrays.asList(
-            "묵스", "핏펫", "ANF", "세이펫", "모든펫",
-            "캐츠랑", "리포소", "가르르", "일룸", "아가드",
-            "올리", "딩동펫", "펫토", "초코펫하우스", "오브바이포",
-            "두잇", "텍미홈", "밀리언펫", "로하우스", "마루이"
-    )),
-
-    CAMPING(Arrays.asList(
-            "제백", "로티캠프", "위드퍼니처", "체어팩토리", "아트웨이",
-            "영가구", "오버더", "인블루가구", "코지앤코", "체어센스",
-            "지라프", "마이크로킥보드", "깃든", "에이비퍼니쳐", "레토",
-            "캠핑칸", "손리", "브리즈문", "캉거", "아베나키"
-    )),
-
-    RENTAL(Arrays.asList(
-            "컴프로", "누하스", "세라젬", "헨지디자인", "퍼니챗",
-            "다이슨", "미닉스", "HP", "쿠쿠", "린클",
-            "대림케어", "플레이스테이션", "유버스", "레이잉", "SK브로드밴드",
-            "한국갤러리", "캐리어", "메가스터디교육", "비상교육", "하이얼"
-    )),
-
-    SHOPPING(Arrays.asList(
-            "헤드앤숄더", "코튼리빙", "진심감성", "송월타월", "동서식품",
-            "무타공마켓", "BAS", "얼라이브즈", "닥터워터", "리프홈",
-            "오가든", "베베숲", "뉴트리시아", "베베앙", "바겐슈타이거",
-            "락앤락", "아이러브베베", "팸퍼스", "라다타", "살림의기술"
-    )),
-
-    TOOL(Arrays.asList(
-            "프로메이드", "스윗홈", "파워존", "디월트", "SANRO",
-            "밀레시스템", "자취생활연구소", "아이정", "직방 스마트 홈", "몬세라믹",
-            "보쉬(BOSCH)", "러그박스", "올웨이즈홈", "게이트맨", "도튼",
-            "주식회사 새로고침", "써지오", "매직픽스", "46month", "에코너"
     )),
 
     LIGHTING(Arrays.asList(
@@ -231,39 +160,11 @@ public enum BrandCatalog {
             if (categoryName.contains("패브릭")) {
                 return FABRIC;
             }
-            if (categoryName.contains("가전") || categoryName.contains("디지털")) {
-                return ELECTRONICS;
-            }
-            if (categoryName.contains("주방")) {
-                return KITCHEN;
-            }
-            if (categoryName.contains("데코") || categoryName.contains("식물")) {
-                return DECOR_PLANT;
-            }
+
             if (categoryName.contains("수납")) {
                 return STORAGE;
             }
-            if (categoryName.contains("유아") || categoryName.contains("아동")) {
-                return KIDS;
-            }
-            if (categoryName.contains("생활")) {
-                return LIVING;
-            }
-            if (categoryName.contains("반려") || categoryName.contains("펫")) {
-                return PET;
-            }
-            if (categoryName.contains("캠핑") || categoryName.contains("레저")) {
-                return CAMPING;
-            }
-            if (categoryName.contains("렌탈")) {
-                return RENTAL;
-            }
-            if (categoryName.contains("장보기")) {
-                return SHOPPING;
-            }
-            if (categoryName.contains("공구")) {
-                return TOOL;
-            }
+
             if (categoryName.contains("조명")) {
                 return LIGHTING;
             }
