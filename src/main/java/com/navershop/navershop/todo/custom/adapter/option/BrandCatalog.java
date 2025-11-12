@@ -198,7 +198,6 @@ public enum BrandCatalog {
      * 카테고리명으로 BrandCatalog 찾기
      */
     public static BrandCatalog fromCategoryName(String categoryName) {
-        // "가구" 카테고리면 FURNITURE 반환
         if (categoryName != null) {
             if (categoryName.contains("가구")) {
                 return FURNITURE;

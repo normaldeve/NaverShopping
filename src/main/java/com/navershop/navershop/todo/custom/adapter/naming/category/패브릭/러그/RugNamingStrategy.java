@@ -85,7 +85,7 @@ public class RugNamingStrategy implements ProductNamingStrategy {
                     for (String possible : POSSIBLE) {
                         String descriptor = getRandomItem(DESCRIPTORS);
 
-                        String productName = String.format("%s %s %s %s %s %s (%s)",
+                        String productName = String.format("[%s] %s %s %s %s %s (%s)",
                                 brand, descriptor, detail, shape, feature, categoryName, possible);
 
                         allCombinations.add(productName);

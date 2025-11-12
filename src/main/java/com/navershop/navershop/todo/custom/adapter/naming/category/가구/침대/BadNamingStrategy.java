@@ -90,7 +90,7 @@ public class BadNamingStrategy implements ProductNamingStrategy {
                         // 꾸미는말만 랜덤
                         String descriptor = getRandomItem(DESCRIPTORS);
 
-                        String productName = String.format("%s %s %s %s사이즈 %s %s%s",
+                        String productName = String.format("[%s] %s %s 재질의 %s사이즈 %s %s%s",
                                 brand, descriptor, material, size, frame, type, categoryName);
 
                         allCombinations.add(productName);

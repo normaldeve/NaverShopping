@@ -86,7 +86,7 @@ public class CurtainNamingStrategy implements ProductNamingStrategy {
                     for (String type : TYPES) {
                         String descriptor = getRandomItem(DESCRIPTORS);
 
-                        String productName = String.format("%s %s %s %s %s %s (%s)",
+                        String productName = String.format("[%s] %s %s %s %s %s (%s)",
                                 brand, descriptor, material, shape, fluffy, categoryName, type);
 
                         allCombinations.add(productName);

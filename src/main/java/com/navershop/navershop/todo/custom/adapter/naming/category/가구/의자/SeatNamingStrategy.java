@@ -80,8 +80,8 @@ public class SeatNamingStrategy implements ProductNamingStrategy {
                 for (String fluffy : FLUFFY) {
                     String descriptor = getRandomItem(DESCRIPTORS);
 
-                    String productName = String.format("%s %s %s %s %s %s",
-                            brand, descriptor, material, fluffy, shape, categoryName);
+                    String productName = String.format("[%s] %s %s 재질의 %s %s (%s)",
+                            brand, descriptor, material, shape, categoryName, fluffy);
 
                     allCombinations.add(productName);
                 }

@@ -85,7 +85,7 @@ public class SofaNamingStrategy implements ProductNamingStrategy {
                     for (String fluffy : FLUFFY) {
                         String descriptor = getRandomItem(DESCRIPTORS);
 
-                        String productName = String.format("%s %s %s %s %s %s %s",
+                        String productName = String.format("[%s] %s %s용 %s 재질의 %s %s %s",
                                 brand, descriptor, size, material, fluffy, shape, categoryName);
 
                         allCombinations.add(productName);
